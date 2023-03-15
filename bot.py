@@ -2,12 +2,13 @@
 import os
 import const
 from  file_interaction import *
+from tts import tts
 
 import discord
 
 from dotenv import load_dotenv
 #import opus
-from ai_interaction import query, query_old, query_image
+from ai_interaction import query, query_old, query_image, needs_moderation
 
 load_dotenv()
 #opus.load_opus()
@@ -24,6 +25,7 @@ client.current_status = 'Off'
 client.model = 'gpt-3.5-turbo'
 client.in_voice = False
 client.voice_client = None
+client.tts = False
 
 @client.event
 async def on_ready():
@@ -55,6 +57,10 @@ async def on_message(message):
             return
         else:
             return
+        
+    
+    if needs_moderation(message.content):
+        await message.reply(const.MODERATION_NOTIFY)
 
     # Toggle
     if client.current_status == 'Off':
@@ -78,7 +84,12 @@ async def on_message(message):
 
         client.last_sender = client.conversee
         client.conversee = message.author
-        await message.channel.send(response)
+        if client.tts:
+            tts(response, 'res/response.mp3')
+            await message.channel.send(response)
+            await play_audio('res/response.mp3')
+        else:
+            await message.channel.send(response)
 
 def should_respond(message) -> bool:
     # if talking to self, stop
@@ -144,7 +155,7 @@ def special_commands(parts:list) -> str:
         if image:
             return image
         else:
-            return const.IMAGE_ERROR
+            return const.IMAGE_GENERATE_ERROR
     elif parts[0] == '-ping':
         return const.PONG_NOTIFY
     elif parts[0] == '-join':
@@ -157,6 +168,13 @@ def special_commands(parts:list) -> str:
             return const.NOT_IN_VOICE_ERROR
         client.in_voice = False
         return const.LEAVE_NOTIFY
+    elif parts[0] == '-tts':
+        if client.tts:
+            client.tts = False
+            return const.TTS_OFF_NOTIFY
+        else:
+            client.tts = True
+            return const.TTS_ON_NOTIFY
     elif parts[0] == '-o':
         return
     else:
@@ -167,6 +185,8 @@ async def play_audio(file):
         return
     voice_client = client.voice_clients[0]
     audio_source = discord.FFmpegPCMAudio(file)
+    if voice_client.is_playing():
+        voice_client.stop()
     voice_client.play(audio_source)
 
 def clean_response(response) -> str:
