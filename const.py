@@ -9,7 +9,7 @@ Here are some commands you can use:
 `-help` - Show this message
 `-image <prompt>` - Generate an image"""
 
-VALID_MODELS = ['gpt-3.5-turbo', 'gpt-4', 'davinci', 'curie', 'babbage', 'ada']
+VALID_MODELS = ['', 'gpt-3.5-turbo', 'gpt-4', 'davinci', 'curie', 'babbage', 'ada']
 VALID_COMMAND_HEADERS = [
     '-start',
     '-stop',
@@ -17,11 +17,12 @@ VALID_COMMAND_HEADERS = [
     '-get',
     '-help',
     '-image',
-    '-ping'
+    '-ping',
+    '-o'
 ]
 
 # Error messages
-INVALID_MODEL_ERROR = 'Invalid model. Valid models are: ' + str(VALID_MODELS)
+INVALID_MODEL_ERROR = 'Invalid model. Valid models are: \n```' + '\n'.join(VALID_MODELS) + '```'
 INVALID_COMMAND_ERROR = 'Invalid command. Use `-help` to see a list of commands.'
 ALREADY_STARTED_ERROR = 'Conversation already started. Use `-stop` to stop a conversation.'
 ALREADY_STOPPED_ERROR = 'Conversation already stopped. Use `-start` to start a conversation.'

@@ -12,7 +12,6 @@ def generate_response_old(prompt, engine="ada"):
         prompt=prompt,
         max_tokens=1024,
         n=1,
-        stop=None,
         temperature=0.5,
     )
     return response["choices"][0]["text"]

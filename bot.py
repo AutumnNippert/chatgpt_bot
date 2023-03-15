@@ -30,7 +30,9 @@ async def on_message(message):
     if message.type != discord.MessageType.default and message.type != discord.MessageType.reply:
         return
     
-    # set last_sender to author
+    log_message(message)
+    
+    # Set last_sender to author
     client.last_sender = message.author
 
     # Special Commands
@@ -47,17 +49,13 @@ async def on_message(message):
     # Toggle
     if client.current_status == 'Off':
         return
-        
-    # Log Message
-    timestamp = message.created_at.strftime("%m/%d/%Y, %H:%M:%S")
-    append_to_file('messages.log', str(timestamp) + ":: " + str(client.last_sender) + ' -> ' + str(client.conversee) + ' : ' + str(message.content))
 
+    # Check if should respond
     if not should_respond(message):
         client.conversee = message.author
         client.last_sender = client.user
         return
     
-
     # Using AI
     async with message.channel.typing():
         # Generate Response
@@ -110,7 +108,7 @@ def special_commands(parts:list) -> str:
             return const.STOP_NOTIFY
     elif parts[0] == '-model':
         if len(parts) == 1:
-            return const.INVALID_COMMAND_ERROR
+            return const.INVALID_MODEL_ERROR
         elif parts[1] in const.VALID_MODELS:
             client.model = parts[1]
             return const.MODEL_SET_NOTIFY + parts[1]
@@ -139,6 +137,8 @@ def special_commands(parts:list) -> str:
             return const.IMAGE_ERROR
     elif parts[0] == '-ping':
         return const.PONG_NOTIFY
+    elif parts[0] == '-o':
+        return
     else:
         return const.INVALID_COMMAND_ERROR
 
@@ -151,5 +151,12 @@ def clean_response(response) -> str:
         response = response[:2000]
 
     return response
+
+def log_message(message):
+    if client.current_status == 'Off':
+        return
+    
+    timestamp = message.created_at.strftime("%m/%d/%Y, %H:%M:%S")
+    append_to_file('messages.log', str(timestamp) + ":: " + str(client.last_sender) + ' -> ' + str(client.conversee) + ' : ' + str(message.content))
 
 client.run(TOKEN)
