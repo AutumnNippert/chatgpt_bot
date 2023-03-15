@@ -6,6 +6,11 @@ from dotenv import load_dotenv
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+def convert_audio_to_text(audio_file_path) -> str:
+    audio_file= open(audio_file_path, "rb")
+    transcript = openai.Audio.transcribe("whisper-1", audio_file)
+    return transcript['text']
+
 def generate_response_old(prompt, engine="ada"):
     response = openai.Completion.create(
         engine=engine,
@@ -37,7 +42,9 @@ def generate_image(prompt):
     image_url = response['data'][0]['url']
     return image_url
 
+
 # Define function to run the chatbot
+
 def query(prompt):
     return generate_response(prompt)
 
@@ -47,6 +54,8 @@ def query_image(prompt):
 def query_old(prompt, engine="ada"):
     return generate_response_old(prompt, engine)
 
+def test_audio():
+    print(convert_audio_to_text("test_files/hungry.wav"))
 
 if __name__ == "__main__":
-    print(query("Hello, how are you?"))
+    test_audio()

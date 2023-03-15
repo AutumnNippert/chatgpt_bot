@@ -3,11 +3,19 @@ import os
 import const
 from  file_interaction import *
 
+import asyncio
+
 import discord
+from discord import VoiceClient
+import shutil
+from discord.ext import commands
+
 from dotenv import load_dotenv
+#import opus
 from ai_interaction import query, query_old, query_image
 
 load_dotenv()
+#opus.load_opus()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 intents = discord.Intents.default()
@@ -19,6 +27,8 @@ client.conversee = None
 client.last_sender = None
 client.current_status = 'Off'
 client.model = 'gpt-3.5-turbo'
+client.in_voice = False
+client.voice_client = None
 
 @client.event
 async def on_ready():
@@ -41,6 +51,11 @@ async def on_message(message):
         parts = message.content.split(' ')
         special_command = special_commands(parts)
         if special_command:
+            if special_command == const.JOIN_NOTIFY:
+                client.voice_client = await message.author.voice.channel.connect()
+                await play_audio('res/join.wav')
+            elif special_command == const.LEAVE_NOTIFY:
+                await client.voice_client.disconnect()
             await message.channel.send(special_command)
             return
         else:
@@ -137,10 +152,27 @@ def special_commands(parts:list) -> str:
             return const.IMAGE_ERROR
     elif parts[0] == '-ping':
         return const.PONG_NOTIFY
+    elif parts[0] == '-join':
+        if client.in_voice:
+            return const.ALREADY_JOINED_ERROR
+        client.in_voice = True
+        return const.JOIN_NOTIFY
+    elif parts[0] == '-leave':
+        if not client.in_voice:
+            return const.NOT_IN_VOICE_ERROR
+        client.in_voice = False
+        return const.LEAVE_NOTIFY
     elif parts[0] == '-o':
         return
     else:
         return const.INVALID_COMMAND_ERROR
+
+async def play_audio(file):
+    if not client.in_voice:
+        return
+    voice_client = client.voice_clients[0]
+    audio_source = discord.FFmpegPCMAudio(file)
+    voice_client.play(audio_source)
 
 def clean_response(response) -> str:
     # if the first characters are "As an AI language model, ", remove them
