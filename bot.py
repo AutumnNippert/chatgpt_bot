@@ -1,12 +1,11 @@
 # bot.py
 import os
 import const
-from wrappers import *
 from  file_interaction import *
 
 import discord
 from dotenv import load_dotenv
-from ai_interaction import query
+from ai_interaction import query, query_old, query_image
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -19,6 +18,7 @@ client = discord.Client(intents=intents)
 client.conversee = None
 client.last_sender = None
 client.current_status = 'Off'
+client.model = 'gpt-3.5-turbo'
 
 @client.event
 async def on_ready():
@@ -26,14 +26,22 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    # if not a message
+    if message.type != discord.MessageType.default and message.type != discord.MessageType.reply:
+        return
+    
+    # set last_sender to author
     client.last_sender = message.author
 
     # Special Commands
-    # if starts with -c, it's a special command
-    if message.content[:2] == '-c':
-        special_command = special_commands(message)
+    # check if starts with a command header
+    if message.content.split(' ')[0] in const.VALID_COMMAND_HEADERS:
+        parts = message.content.split(' ')
+        special_command = special_commands(parts)
         if special_command:
             await message.channel.send(special_command)
+            return
+        else:
             return
 
     # Toggle
@@ -51,14 +59,13 @@ async def on_message(message):
     
 
     # Using AI
-    model = 'gpt-3.5-turbo'
     async with message.channel.typing():
-        # Model Selection
-        if '--model gpt-4' in message.content:
-            await message.channel.send('Currently, there is a limited beta for GPT4 that I am not capable of accessing.')
-            return
+        # Generate Response
+        if client.model != 'gpt-3.5-turbo':
+            response = query_old(message.content, client.model)
+        else:
+            response = query(message.content)
 
-        response = query(message.content, model)
         response = clean_response(response)
 
         client.last_sender = client.conversee
@@ -88,29 +95,52 @@ def should_respond(message) -> bool:
     
     return True
 
-def special_commands(message) -> str:
-    if '--command help' in message.content or '-c help' in message.content:
-        return const.HELP_STRING
-
-    if '--command ping' in message.content or '-c ping' in message.content:
-        return 'Pong!'
-    
-    if '--command ping' in message.content or '-c start' in message.content:
+def special_commands(parts:list) -> str:
+    if parts[0] == '-start':
         if client.current_status == 'On':
-            return 'Conversation already started. Use `-c stop` to stop a conversation.'
-        client.current_status = 'On'
-        return 'Starting conversation.'
-    
-    if '--command stop' in message.content or '-c stop' in message.content:
+            return const.ALREADY_STARTED_ERROR
+        else:
+            client.current_status = 'On'
+            return const.START_NOTIFY
+    elif parts[0] == '-stop':
         if client.current_status == 'Off':
-            return 'Conversation already stopped. Use `-c start` to start a conversation.'
-        client.current_status = 'Off'
-        return 'Stopping conversation.'
-    
-    if '--command status' in message.content or '-c status' in message.content:
-        return 'Status: ' + str(client.current_status)
-
-    return None
+            return const.ALREADY_STOPPED_ERROR
+        else:
+            client.current_status = 'Off'
+            return const.STOP_NOTIFY
+    elif parts[0] == '-model':
+        if len(parts) == 1:
+            return const.INVALID_COMMAND_ERROR
+        elif parts[1] in const.VALID_MODELS:
+            client.model = parts[1]
+            return const.MODEL_SET_NOTIFY + parts[1]
+        else:
+            return const.INVALID_MODEL_ERROR
+    elif parts[0] == '-get':
+        if len(parts) == 1:
+            return const.INVALID_COMMAND_ERROR
+        elif parts[1] == 'model':
+            return const.MODEL_GET_NOTIFY + client.model
+        elif parts[1] == 'status':
+            return const.STATUS_GET_NOTIFY + client.current_status
+        else:
+            return const.INVALID_COMMAND_ERROR
+    elif parts[0] == '-help':
+        return const.HELP_STRING
+    elif parts[0] == '-image':
+        if len(parts) == 1:
+            return const.INVALID_COMMAND_ERROR
+        
+        query = ' '.join(parts[1:])
+        image = query_image(query)
+        if image:
+            return image
+        else:
+            return const.IMAGE_ERROR
+    elif parts[0] == '-ping':
+        return const.PONG_NOTIFY
+    else:
+        return const.INVALID_COMMAND_ERROR
 
 def clean_response(response) -> str:
     # if the first characters are "As an AI language model, ", remove them
