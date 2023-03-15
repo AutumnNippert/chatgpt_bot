@@ -1,0 +1,1 @@
+HELP_STRING='I will respond to any message that does not contain a ping or mention of another user, unless that user is myself.'
