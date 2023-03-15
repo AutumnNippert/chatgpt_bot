@@ -45,7 +45,7 @@ def generate_image(prompt):
     except Exception as e:
         print(e)
 
-def needs_moderation(message)->bool:
+def needs_moderation(message) -> bool:
     if 'dumbass' in message: # fun little ee
         return True
     response = openai.Moderation.create(

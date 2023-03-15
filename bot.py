@@ -85,9 +85,9 @@ async def on_message(message):
         client.last_sender = client.conversee
         client.conversee = message.author
         if client.tts:
-            tts(response, 'res/response.mp3')
+            tts(response, 'tmp/response.mp3')
             await message.channel.send(response)
-            await play_audio('res/response.mp3')
+            await play_audio('tmp/response.mp3')
         else:
             await message.channel.send(response)
 
