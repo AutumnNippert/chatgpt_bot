@@ -3,12 +3,7 @@ import os
 import const
 from  file_interaction import *
 
-import asyncio
-
 import discord
-from discord import VoiceClient
-import shutil
-from discord.ext import commands
 
 from dotenv import load_dotenv
 #import opus
