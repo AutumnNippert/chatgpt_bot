@@ -75,7 +75,7 @@ async def on_message(message):
     log_message(message, guild_id)
     
     # Set last_sender to author
-    client.configs[guild_id].last_sender = message.author
+    client.configs[guild_id].last_sender = message.author.id
 
     if client.configs[guild_id].moderation:
         if needs_moderation(message.content):
@@ -108,8 +108,7 @@ async def on_message(message):
                 await client.configs[guild_id].voice_client.disconnect()
             elif special_command == const.SHUTDOWN_NOTIFY:
                 await message.channel.send(special_command)
-                #save_configs(client.configs, 'configs.json')
-                await message.channel.send('Currently Not Functional :3')
+                save_configs(client.configs, 'configs.json')
                 await client.close()
             elif const.IMAGE_GENERATE_NOTIFY in special_command:
                 await message.channel.send(const.IMAGE_GENERATE_NOTIFY)
@@ -129,8 +128,8 @@ async def on_message(message):
 
     # Check if should respond
     if not should_respond(message):
-        client.configs[guild_id].conversee = message.author
-        client.configs[guild_id].last_sender = client.user
+        client.configs[guild_id].conversee = message.author.id
+        client.configs[guild_id].last_sender = client.user.id
         return
     
     # Toggle
@@ -148,7 +147,7 @@ async def on_message(message):
         response = clean_response(response)
 
         client.configs[guild_id].last_sender = client.configs[guild_id].conversee
-        client.configs[guild_id].conversee = message.author
+        client.configs[guild_id].conversee = message.author.id
         if client.configs[guild_id].tts:
             if client.configs[guild_id].tts_upgrade:
                 tts_watson(response, 'tmp/response.mp3')
@@ -162,7 +161,7 @@ async def on_message(message):
 def should_respond(message) -> bool:
     guild_id = message.guild.id
     # if talking to self, stop
-    if client.configs[guild_id].last_sender == client.user and client.configs[guild_id].conversee == client.user:
+    if client.configs[guild_id].last_sender == client.user.id and client.configs[guild_id].conversee == client.user.id:
         return False
     
     # if bot is mentioned, respond

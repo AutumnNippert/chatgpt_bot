@@ -29,7 +29,7 @@ VALID_COMMAND_HEADERS = [
     '-ask',
     '-start',
     '-stop',
-    #'-model',
+    '-model',
     '-get',
     '-help',
     '-image',
@@ -99,5 +99,5 @@ MODERATION_OFF_NOTIFY = 'Moderation mode is now off.'
 MODERATION_NOTIFY = 'This message is cringe. Im gonna remove it.'
 
 # Other
-OWNER_ID=253296663765057539
+OWNER_ID = 253296663765057539
 CLEARED_USERS = [OWNER_ID]

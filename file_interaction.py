@@ -17,7 +17,7 @@ def save_configs(configs:dict, file_name): #not workin lol
         configs[key] = value.__dict__()
 
     with open(file_name, 'w') as f:
-        dumps = json.dumps(configs)
+        dumps = json.dumps(configs, indent=4)
         f.write(dumps)
 
 def load_configs(file_name) -> dict:
