@@ -18,24 +18,25 @@ intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
-client.configs = {}
-
 @client.event
 async def on_ready():
     print(f'{client.user} has connected to Discord!')
 
-    client.configs = load_configs('configs.json')
+    client.configs = load_configs('data/configs.json')
     if client.configs == {}:
         print('No Configs Found. Creating New Configs...')
         for guild in client.guilds:
             client.configs[guild.id] = BotConfig()
         
-        save_configs(client.configs, 'configs.json')
+        save_configs(client.configs, 'data/configs.json')
         print('Configs Created')
 
-        client.configs = load_configs('configs.json')
+        client.configs = load_configs('data/configs.json')
 
     print('Configs Loaded')
+    
+    game = discord.Game("with the API")
+    await client.change_presence(activity=game)
 
     # for guild in client.guilds:
     #     configs[guild.id] = BotConfig()
@@ -55,15 +56,12 @@ async def on_message(message):
 
     # if DM
     if not message.guild:
-        print('DM from ' + message.author.name + ': ' + message.content)
+        print('Attempted DM from ' + message.author.name + ': ' + message.content)
         try:
-            async with message.channel.typing():
-                response = query(message.content)
-                response = clean_response(response)
-                print('DM to ' + message.author.name + ': ' + response)
-                await message.channel.send(response)
-        except discord.errors.Forbidden:
-            print('Could not send DM to user')
+            await message.author.send(const.DM_NOTIFY)
+        except Exception as e:
+            print('Could not send DM message to user')
+            print(e)
         finally:
             return
     
@@ -108,6 +106,13 @@ async def on_message(message):
                 await client.configs[guild_id].voice_client.disconnect()
             elif special_command == const.SHUTDOWN_NOTIFY:
                 await message.channel.send(special_command)
+                #if voice client is connected from all servers, disconnect
+                for config in client.configs.values():
+                    if config.voice_client:
+                        await config.voice_client.disconnect()
+                        break
+                    config.voice_client = None
+                await client.close()
                 save_configs(client.configs, 'configs.json')
                 await client.close()
             elif const.IMAGE_GENERATE_NOTIFY in special_command:

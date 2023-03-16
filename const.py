@@ -87,6 +87,8 @@ LEAVE_NOTIFY = 'Leaving voice channel...'
 
 PONG_NOTIFY = 'Pong!'
 
+DM_NOTIFY = 'This bot is not meant to be used in DMs. Please use it in a server.'
+
 TTS_ON_NOTIFY = 'TTS is now on.'
 TTS_OFF_NOTIFY = 'TTS is now off.'
 TTS_UPGRADE_ON_NOTIFY = 'TTS has been upgraded.'
