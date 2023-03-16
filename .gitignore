@@ -1,8 +1,7 @@
 __pycache__/
-test_files/
 tmp/
 logs/
+data/
 .venv/
 .env
 .ssh
-configs.json
