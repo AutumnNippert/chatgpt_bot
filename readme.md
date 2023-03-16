@@ -2,4 +2,4 @@
 
 # NOTE: This is not the proper way to make a discord bot
 
-# https://discord.com/api/oauth2/authorize?client_id=1085319165650411570&permissions=3147776&scope=bot
+# No Moderation Privileges: https://discord.com/api/oauth2/authorize?client_id=1085319165650411570&permissions=3147776&scope=bot

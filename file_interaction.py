@@ -12,8 +12,13 @@ def append_to_file(file_name, text_to_append):
 
 def save_configs(configs:dict, file_name): #not workin lol
     """Save configs to file"""
+    #for each value in configs, convert to dict
+    for key, value in configs.items():
+        configs[key] = value.__dict__()
+
     with open(file_name, 'w') as f:
-        json.dump(configs, f)
+        dumps = json.dumps(configs)
+        f.write(dumps)
 
 def load_configs(file_name) -> dict:
     """Load configs from file"""
@@ -24,10 +29,6 @@ def load_configs(file_name) -> dict:
 
     configs_dict = {}
     for key, value in configs.items():
-        #value to string
-        value = json.dumps(value)
-        #string to BotConfig
-        value = json.loads(value, object_hook=lambda d: BotConfig(**d))
-        configs_dict[int(key)] = value
+        configs_dict[int(key)] = BotConfig.create_from_dict(value)
 
     return configs_dict

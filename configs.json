@@ -1,1 +1,35 @@
-{"474096541142089728": 
+{
+    "474096541142089728": {
+        "conversee": null,
+        "last_sender": null,
+        "current_status": "Off",
+        "model": "gpt-3.5-turbo",
+        "in_voice": false,
+        "voice_client": null,
+        "tts": false,
+        "tts_upgrade": false,
+        "moderation": false
+    },
+    "1065302721479049368": {
+        "conversee": null,
+        "last_sender": null,
+        "current_status": "Off",
+        "model": "gpt-3.5-turbo",
+        "in_voice": false,
+        "voice_client": null,
+        "tts": false,
+        "tts_upgrade": false,
+        "moderation": false
+    },
+    "1085772115736797205": {
+        "conversee": null,
+        "last_sender": null,
+        "current_status": "Off",
+        "model": "gpt-3.5-turbo",
+        "in_voice": false,
+        "voice_client": null,
+        "tts": false,
+        "tts_upgrade": false,
+        "moderation": false
+    }
+}
