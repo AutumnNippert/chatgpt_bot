@@ -4,5 +4,4 @@ tmp/
 logs/
 .venv/
 .env
-messages.log
 configs.json
