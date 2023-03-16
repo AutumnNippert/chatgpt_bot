@@ -1,6 +1,8 @@
 __pycache__/
 test_files/
 tmp/
+logs/
 .venv/
 .env
-messages.log
+.messages.log
+.configs.json
