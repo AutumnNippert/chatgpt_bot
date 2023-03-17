@@ -1,9 +1,7 @@
 # bot.py
 import os
 import sys
-# caution: path[0] is reserved for script path (or '' in REPL)
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
-print(sys.path)
 
 import res.const as const
 from bin.utils.file_interaction import *
@@ -54,9 +52,6 @@ async def on_guild_join(guild):
 
 @client.event
 async def on_message(message):
-    if message.author == client.user:
-        return
-
     # if DM
     if not message.guild:
         print('Attempted DM from ' + message.author.name + ': ' + message.content)
@@ -69,6 +64,21 @@ async def on_message(message):
             return
     
     guild_id = message.guild.id
+
+    #create memory if not exists
+    if not hasattr(client.configs[guild_id], 'past_10_messages'):
+        client.configs[guild_id].past_10_messages = []
+    # keep track of memory
+    if message.author == client.user:
+        client.configs[guild_id].past_10_messages.append('AI: ' + message.content)
+        if len(client.configs[guild_id].past_10_messages) > 10:
+            client.configs[guild_id].past_10_messages.pop(0)
+        return
+    
+    client.configs[guild_id].past_10_messages.append('USER: ' + message.content)
+    if len(client.configs[guild_id].past_10_messages) > 10:
+        client.configs[guild_id].past_10_messages.pop(0)
+
     # if not a message
     if message.type != discord.MessageType.default and message.type != discord.MessageType.reply:
         return
@@ -102,9 +112,45 @@ async def on_message(message):
                     response = clean_response(response)
                     await message.channel.send(response)
                     return
+            if const.SAY_NOTIFY in special_command:
+                if client.configs[guild_id].voice_client:
+                    async with message.channel.typing():
+                        text = special_command.replace(const.SAY_NOTIFY, '')
+                        filename = str(guild_id) + '_say_request.mp3'
+                        if client.configs[guild_id].tts_upgrade:
+                            tts_watson(text, filename)
+                        else:
+                            tts(text, filename)
+                    await message.channel.send(message.author.name + ' told me to say: ' + text)
+                    await play_audio(filename, guild_id)
+                    await remove_audio_file_when_done(filename, guild_id)
+                    return
+                else:
+                    try:
+                        async with message.channel.typing():
+                            text = special_command.replace(const.SAY_NOTIFY, '')
+                            filename = str(guild_id) + '_say_request.mp3'
+                            if client.configs[guild_id].tts_upgrade:
+                                tts_watson(text, filename)
+                            else:
+                                tts(text, filename)
+                            
+                            #join
+                            client.configs[guild_id].voice_client = await message.author.voice.channel.connect()
+                            client.configs[guild_id].in_voice = True
+                            await message.channel.send(message.author.name + ' told me to say: ' + text)
+                            await play_audio(filename, guild_id)
+                            await remove_audio_file_when_done(filename, guild_id)
+                            await disconnect_when_done(guild_id)
+                            client.configs[guild_id].voice_client = None
+                            client.configs[guild_id].in_voice = False
+                            return
+                    except Exception as e:
+                        message.channel.send(const.USER_NOT_IN_VOICE_ERROR)
+                        return
             elif special_command == const.JOIN_NOTIFY:
                 client.configs[guild_id].voice_client = await message.author.voice.channel.connect()
-                await play_audio('res/join.mp3', guild_id)
+                await play_audio('join.mp3', guild_id)
             elif special_command == const.LEAVE_NOTIFY:
                 await client.configs[guild_id].voice_client.disconnect()
             elif special_command == const.SHUTDOWN_NOTIFY:
@@ -150,19 +196,21 @@ async def on_message(message):
         if client.configs[guild_id].model != 'gpt-3.5-turbo':
             response = query_old(message.content, client.configs[guild_id].model)
         else:
-            response = query(message.content)
+            response = query(str(client.configs[guild_id].past_10_messages) + message.content)
 
         response = clean_response(response)
 
         client.configs[guild_id].last_sender = client.configs[guild_id].conversee
         client.configs[guild_id].conversee = message.author.id
         if client.configs[guild_id].tts:
+            filename = str(guild_id) + '_tts_response.mp3'
             if client.configs[guild_id].tts_upgrade:
-                tts_watson(response, 'tmp/response.mp3')
+                tts_watson(response, filename)
             else:
-                tts(response, 'tmp/response.mp3')
+                tts(response, filename)
             await message.channel.send(response)
-            await play_audio('tmp/response.mp3', guild_id)
+            await play_audio(filename, guild_id)
+            await remove_audio_file_when_done(filename, guild_id)
         else:
             await message.channel.send(response)
 
@@ -267,6 +315,10 @@ def special_commands(message, guild_id) -> str:
         else:
             client.configs[guild_id].tts_upgrade = True
             return const.TTS_UPGRADE_ON_NOTIFY
+    elif parts[0] == '-say':
+        if len(parts) == 1:
+            return const.INVALID_COMMAND_ERROR
+        return const.SAY_NOTIFY + ' '.join(parts[1:])
     elif parts[0] == '-o':
         return
     elif parts[0] == '-shutdown':
@@ -288,13 +340,30 @@ def special_commands(message, guild_id) -> str:
 async def play_audio(file, guild_id):
     if not client.configs[guild_id].in_voice:
         return
+    file = 'res/' + file
+    print('playing audio file: ' + file)
     voice_client = client.configs[guild_id].voice_client
     audio_source = discord.FFmpegPCMAudio(file)
     if voice_client.is_playing():
         voice_client.stop()
     voice_client.play(audio_source)
 
+async def remove_audio_file_when_done(file, guild_id):
+    file = 'res/' + file
+    from asyncio import sleep
+    while client.configs[guild_id].voice_client.is_playing():
+        await sleep(1)
+    os.remove(file)
+
+async def disconnect_when_done(guild_id):
+    from asyncio import sleep
+    while client.configs[guild_id].voice_client.is_playing():
+        await sleep(1)
+    await client.configs[guild_id].voice_client.disconnect()
+
 def clean_response(response) -> str:
+    if response[:3] == 'AI:':
+        response = response[3:]
     # if the first characters are "As an AI language model, ", remove them
     if response[:27] == '\n\nAs an AI language model, ':
         response = response[27:]
@@ -311,6 +380,6 @@ def log_message(message, guild_id):
     timestamp = message.created_at.strftime("%m/%d/%Y, %H:%M:%S")
     filename = str(guild_id) + '-messages.log'
     text = str(timestamp) + ":: " + str(client.configs[guild_id].last_sender) + ' -> ' + str(client.configs[guild_id].conversee) + ' : ' + str(message.content)
-    log(text, filename)
+    log(filename, text)
 
 client.run(TOKEN)

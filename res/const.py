@@ -17,6 +17,7 @@ Here are some commands you can use:
 `-join <channel>` - Join a voice channel
 `-leave` - Leave the voice channel
 `-tts` - Toggle text-to-speech (must be in a voice channel)
+`-say <message>` - Make me say something
 `-o <message>` - Omit a message while conversing
 
 Cleared-user commands:
@@ -39,6 +40,7 @@ VALID_COMMAND_HEADERS = [
     '-leave',
     '-tts',
     '-tts-upgrade',
+    '-say',
     '-shutdown',
     '-mod',
     '-o'
@@ -71,6 +73,7 @@ IMAGE_GENERATE_ERROR = 'Image generation failed.'
 JOIN_SERVER_NOTIFY = 'Hey everyone! Im Chattr! Use `-help` to see a list of commands.'
 
 ASK_NOTIFY = 'ASK_NOTIFY:'
+SAY_NOTIFY = 'SAY_NOTIFY:'
 
 START_NOTIFY = 'Starting conversation.'
 STOP_NOTIFY = 'Stopping conversation.'
@@ -103,4 +106,4 @@ MODERATION_NOTIFY = 'This message is cringe. Im gonna remove it.'
 
 # Other
 OWNER_ID = 253296663765057539
-CLEARED_USERS = [OWNER_ID]
+CLEARED_USERS = [OWNER_ID, 253718757690572802]

@@ -10,6 +10,7 @@ WATSON_API_KEY=os.getenv('WATSON_API_KEY')
 def tts(text, filename="output.mp3"):
     """Convert text to speech and save as mp3 file"""
     obj = gTTS(text=text, lang='en', tld='com.au', slow=False)
+    filename = "res/" + filename
     obj.save(filename)
 
 def tts_watson(text, filename="output.mp3"):
@@ -21,6 +22,8 @@ def tts_watson(text, filename="output.mp3"):
     )
 
     text_to_speech.set_service_url(url)
+
+    filename = "res/" + filename
 
     with open(filename,'wb') as audio_file:
         audio_file.write(text_to_speech.synthesize(text,voice='en-AU_JackExpressive',accept='audio/mp3').get_result().content)
