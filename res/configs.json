@@ -8,7 +8,8 @@
         "voice_client": null,
         "tts": false,
         "tts_upgrade": false,
-        "moderation": false
+        "moderation": false,
+        "message_history_limit": 20
     },
     "1065302721479049368": {
         "conversee": null,
@@ -19,7 +20,8 @@
         "voice_client": null,
         "tts": false,
         "tts_upgrade": false,
-        "moderation": false
+        "moderation": false,
+        "message_history_limit": 20
     },
     "1083899422770995321": {
         "conversee": null,
@@ -30,7 +32,8 @@
         "voice_client": null,
         "tts": false,
         "tts_upgrade": false,
-        "moderation": false
+        "moderation": false,
+        "message_history_limit": 20
     },
     "1085772115736797205": {
         "conversee": null,
@@ -41,6 +44,7 @@
         "voice_client": null,
         "tts": false,
         "tts_upgrade": false,
-        "moderation": false
+        "moderation": false,
+        "message_history_limit": 20
     }
 }

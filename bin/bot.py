@@ -66,18 +66,18 @@ async def on_message(message):
     guild_id = message.guild.id
 
     #create memory if not exists
-    if not hasattr(client.configs[guild_id], 'past_10_messages'):
-        client.configs[guild_id].past_10_messages = []
+    if not hasattr(client.configs[guild_id], 'message_history'):
+        client.configs[guild_id].message_history = []
     # keep track of memory
     if message.author == client.user:
-        client.configs[guild_id].past_10_messages.append('AI: ' + message.content)
-        if len(client.configs[guild_id].past_10_messages) > 10:
-            client.configs[guild_id].past_10_messages.pop(0)
+        client.configs[guild_id].message_history.append('AI: ' + message.content)
+        if len(client.configs[guild_id].message_history) > client.configs[guild_id].message_history_limit:
+            client.configs[guild_id].message_history.pop(0)
         return
     
-    client.configs[guild_id].past_10_messages.append('USER: ' + message.content)
-    if len(client.configs[guild_id].past_10_messages) > 10:
-        client.configs[guild_id].past_10_messages.pop(0)
+    client.configs[guild_id].message_history.append(message.author.name + ': ' + message.content)
+    if len(client.configs[guild_id].message_history) > client.configs[guild_id].message_history_limit:
+        client.configs[guild_id].message_history.pop(0)
 
     # if not a message
     if message.type != discord.MessageType.default and message.type != discord.MessageType.reply:
@@ -196,7 +196,7 @@ async def on_message(message):
         if client.configs[guild_id].model != 'gpt-3.5-turbo':
             response = query_old(message.content, client.configs[guild_id].model)
         else:
-            response = query(str(client.configs[guild_id].past_10_messages) + message.content)
+            response = query(str(client.configs[guild_id].message_history) + message.content)
 
         response = clean_response(response)
 
