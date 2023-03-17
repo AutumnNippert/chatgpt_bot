@@ -5,7 +5,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 import res.const as const
 from bin.utils.file_interaction import *
-from bin.utils.tts import tts, tts_watson
+from bin.utils.tts import tts_watson, tts_google, tts_dectalk
 from bin.utils.ai_interaction import query, query_old, query_image, needs_moderation
 from bin.classes.data_structures import BotConfig
 
@@ -117,10 +117,12 @@ async def on_message(message):
                     async with message.channel.typing():
                         text = special_command.replace(const.SAY_NOTIFY, '')
                         filename = str(guild_id) + '_say_request.mp3'
-                        if client.configs[guild_id].tts_upgrade:
+                        if client.configs[guild_id].tts_service == 'watson':
                             tts_watson(text, filename)
-                        else:
-                            tts(text, filename)
+                        elif client.configs[guild_id].tts_service == 'google':
+                            tts_google(text, filename)
+                        elif client.configs[guild_id].tts_service == 'dectalk':
+                            tts_dectalk(text, filename)
                     await message.channel.send(message.author.name + ' told me to say: ' + text)
                     await play_audio(filename, guild_id)
                     await remove_audio_file_when_done(filename, guild_id)
@@ -130,10 +132,12 @@ async def on_message(message):
                         async with message.channel.typing():
                             text = special_command.replace(const.SAY_NOTIFY, '')
                             filename = str(guild_id) + '_say_request.mp3'
-                            if client.configs[guild_id].tts_upgrade:
+                            if client.configs[guild_id].tts_service == 'watson':
                                 tts_watson(text, filename)
-                            else:
-                                tts(text, filename)
+                            elif client.configs[guild_id].tts_service == 'google':
+                                tts_google(text, filename)
+                            elif client.configs[guild_id].tts_service == 'dectalk':
+                                tts_dectalk(text, filename)
                             
                             #join
                             client.configs[guild_id].voice_client = await message.author.voice.channel.connect()
@@ -199,15 +203,19 @@ async def on_message(message):
             response = query(str(client.configs[guild_id].message_history) + message.content)
 
         response = clean_response(response)
+        if response == '':
+            response = const.NO_RESPONSE_ERROR
 
         client.configs[guild_id].last_sender = client.configs[guild_id].conversee
         client.configs[guild_id].conversee = message.author.id
         if client.configs[guild_id].tts:
             filename = str(guild_id) + '_tts_response.mp3'
-            if client.configs[guild_id].tts_upgrade:
+            if client.configs[guild_id].tts_service == 'watson':
                 tts_watson(response, filename)
-            else:
-                tts(response, filename)
+            elif client.configs[guild_id].tts_service == 'google':
+                tts_google(response, filename)
+            elif client.configs[guild_id].tts_service == 'dectalk':
+                tts_dectalk(response, filename)
             await message.channel.send(response)
             await play_audio(filename, guild_id)
             await remove_audio_file_when_done(filename, guild_id)
@@ -306,15 +314,23 @@ def special_commands(message, guild_id) -> str:
         else:
             client.configs[guild_id].tts = True
             return const.TTS_ON_NOTIFY
-    elif parts[0] == '-tts-upgrade':
-        if message.author.id != const.OWNER_ID:
-            return const.OWNER_ONLY_ERROR
-        if client.configs[guild_id].tts_upgrade:
-            client.configs[guild_id].tts_upgrade = False
-            return const.TTS_UPGRADE_OFF_NOTIFY
+    elif parts[0] == '-ttsset':
+        if len(parts) == 1:
+            return const.TTS_SET_ERROR
+        elif parts[1] == 'google':
+            client.configs[guild_id].tts_service = 'google'
+            return const.TTS_SET_NOTIFY + 'Google'
+        elif parts[1] == 'watson':
+            if message.author.id != const.OWNER_ID:
+                return const.OWNER_ONLY_ERROR
+            client.configs[guild_id].tts_service = 'watson'
+            return const.TTS_SET_NOTIFY + 'Watson'
+        elif parts[1] == 'dectalk':
+            client.configs[guild_id].tts_service = 'dectalk'
+            return const.TTS_SET_NOTIFY + 'Dectalk'
         else:
-            client.configs[guild_id].tts_upgrade = True
-            return const.TTS_UPGRADE_ON_NOTIFY
+            return const.TTS_SET_ERROR
+        
     elif parts[0] == '-say':
         if len(parts) == 1:
             return const.INVALID_COMMAND_ERROR

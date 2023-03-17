@@ -11,13 +11,13 @@ def convert_audio_to_text(audio_file_path) -> str:
     transcript = openai.Audio.transcribe("whisper-1", audio_file)
     return transcript['text']
 
-def generate_response_old(prompt, engine="ada"):
+def generate_response_old(prompt, engine="ada", temperature=0.5, max_tokens=256, n=1, stop='Q:'):
     response = openai.Completion.create(
         engine=engine,
         prompt=prompt,
-        max_tokens=256, # limit because cringe
-        n=1,
-        temperature=0.5,
+        max_tokens=max_tokens, # limit because cringe
+        n=n,
+        temperature=temperature,
     )
     return response["choices"][0]["text"]
 
@@ -54,6 +54,26 @@ def needs_moderation(message) -> bool:
     )
     return response['results'][0]['flagged']
 
+def requires_search(prompt) -> bool:
+    NEEDS_SEARCH_PROMPT = f"""Q: What is the capital of the United States?
+    A: True
+
+    Q: When does this new movie come out?
+    A: True
+
+    Q: How are you today?
+    A: False
+
+    Q: I think that James isn't alive
+    A: False
+
+    Q: You are wrong
+    A: False
+    
+    Q: {prompt}
+    A: """
+    print(openai.Completion.create(model='davinci', prompt=NEEDS_SEARCH_PROMPT, stop="\n", temperature=0))
+
 # Define function to run the chatbot
 
 def query(prompt):
@@ -72,4 +92,4 @@ def test_moderation():
     print(needs_moderation('kill yourself'))
 
 if __name__ == "__main__":
-    test_moderation()
+    print(requires_search('When did george washington die?'))

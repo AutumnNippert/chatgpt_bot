@@ -17,6 +17,7 @@ Here are some commands you can use:
 `-join <channel>` - Join a voice channel
 `-leave` - Leave the voice channel
 `-tts` - Toggle text-to-speech (must be in a voice channel)
+`-ttsset <service>` - Set the text-to-speech service to use
 `-say <message>` - Make me say something
 `-o <message>` - Omit a message while conversing
 
@@ -39,7 +40,7 @@ VALID_COMMAND_HEADERS = [
     '-join',
     '-leave',
     '-tts',
-    '-tts-upgrade',
+    '-ttsset',
     '-say',
     '-shutdown',
     '-mod',
@@ -59,6 +60,10 @@ ALREADY_STOPPED_ERROR = 'Conversation already stopped. Use `-start` to start a c
 ALREADY_JOINED_ERROR = 'Already joined a voice channel. Use `-leave` to leave the voice channel.'
 NOT_IN_VOICE_ERROR = 'Not in a voice channel. Use `-join` to join a voice channel.'
 USER_NOT_IN_VOICE_ERROR = 'User not in a voice channel.'
+NO_RESPONSE_ERROR = 'No response was generated.'
+
+## TTS errors
+TTS_SET_ERROR = 'Invalid use of `-ttsset`. Use `-ttsset <service>`.\nValid services are: `google`, `watson`, and `dectalk`.'
 
 ## Clearance errors
 ADMIN_ONLY_ERROR = 'Only server admins can use this command.'
@@ -95,8 +100,7 @@ DM_NOTIFY = 'This bot is not meant to be used in DMs. Please use it in a server.
 
 TTS_ON_NOTIFY = 'TTS is now on.'
 TTS_OFF_NOTIFY = 'TTS is now off.'
-TTS_UPGRADE_ON_NOTIFY = 'TTS has been upgraded.'
-TTS_UPGRADE_OFF_NOTIFY =  'TTS has been downgraded.'
+TTS_SET_NOTIFY = 'TTS set to: '
 
 SHUTDOWN_NOTIFY = 'Shutting down...'
 

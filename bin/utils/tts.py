@@ -2,12 +2,23 @@ from gtts import gTTS
 from ibm_watson import TextToSpeechV1
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from dotenv import load_dotenv
+import requests
 import os
 
 load_dotenv()
 WATSON_API_KEY=os.getenv('WATSON_API_KEY')
 
-def tts(text, filename="output.mp3"):
+def tts_dectalk(text, filename="output.mp3"):
+    url = 'https://tts.cyzon.us/tts?text='
+    url += text
+    #This url when doing a get request will return a wav file
+    response = requests.get(url)
+    filename = "res/" + filename
+    with open(filename, 'wb') as f:
+        f.write(response.content)
+
+
+def tts_google(text, filename="output.mp3"):
     """Convert text to speech and save as mp3 file"""
     obj = gTTS(text=text, lang='en', tld='com.au', slow=False)
     filename = "res/" + filename
@@ -29,26 +40,4 @@ def tts_watson(text, filename="output.mp3"):
         audio_file.write(text_to_speech.synthesize(text,voice='en-AU_JackExpressive',accept='audio/mp3').get_result().content)
 
 if __name__ == "__main__":
-    tts_watson("""Two roads diverged in a yellow wood,
-And sorry I could not travel both
-And be one traveler, long I stood
-And looked down one as far as I could
-To where it bent in the undergrowth;
-
-Then took the other, as just as fair,
-And having perhaps the better claim,
-Because it was grassy and wanted wear;
-Though as for that the passing there
-Had worn them really about the same,
-
-And both that morning equally lay
-In leaves no step had trodden black.
-Oh, I kept the first for another day!
-Yet knowing how way leads on to way,
-I doubted if I should ever come back.
-
-I shall be telling this with a sigh
-Somewhere ages and ages hence:
-Two roads diverged in a wood, and I—
-I took the one less traveled by,
-And that has made all the difference.""", "tmp/temp.mp3")
+    tts_dectalk("Hello world", "hello.wav")

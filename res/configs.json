@@ -7,7 +7,19 @@
         "in_voice": false,
         "voice_client": null,
         "tts": false,
-        "tts_upgrade": false,
+        "tts_service": "google",
+        "moderation": false,
+        "message_history_limit": 20
+    },
+    "882833062638014484": {
+        "conversee": null,
+        "last_sender": null,
+        "current_status": "Off",
+        "model": "gpt-3.5-turbo",
+        "in_voice": false,
+        "voice_client": null,
+        "tts": false,
+        "tts_service": "google",
         "moderation": false,
         "message_history_limit": 20
     },
@@ -19,7 +31,7 @@
         "in_voice": false,
         "voice_client": null,
         "tts": false,
-        "tts_upgrade": false,
+        "tts_service": "google",
         "moderation": false,
         "message_history_limit": 20
     },
@@ -31,7 +43,7 @@
         "in_voice": false,
         "voice_client": null,
         "tts": false,
-        "tts_upgrade": false,
+        "tts_service": "google",
         "moderation": false,
         "message_history_limit": 20
     },
@@ -43,7 +55,7 @@
         "in_voice": false,
         "voice_client": null,
         "tts": false,
-        "tts_upgrade": false,
+        "tts_service": "google",
         "moderation": false,
         "message_history_limit": 20
     }
