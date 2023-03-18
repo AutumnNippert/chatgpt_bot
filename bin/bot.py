@@ -131,9 +131,9 @@ async def on_message(message):
                     return
             elif const.SUMMARIZE_NOTIFY in special_command:
                 async with message.channel.typing():
-                    url = special_command.replace(const.URL_NOTIFY, '')
+                    url = special_command.replace(const.SUMMARIZE_NOTIFY, '')
                     site_contents = scrape_site(url)
-                    response = query(history=site_contents + [{"role":"user", "content":"Summarize the information."}], personality=False)
+                    response = query(history=(site_contents + [{"role":"user", "content":"Summarize the information."}]), personality=False)
                     response = clean_response(response)
                     await message.channel.send(response)
                     return
