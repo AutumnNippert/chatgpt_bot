@@ -1,10 +1,6 @@
 import wikipedia
-from googlesearch import search
 from bin.utils.ai_interaction import generate_response
 #from bin.utils.spacy_interaction import get_wiki_query
-
-def google_search(query):
-    search(query, num=10)
 
 def search(q, history=[]):
     #wiki_query = get_wiki_query(q)

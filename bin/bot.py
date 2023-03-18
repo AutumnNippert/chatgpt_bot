@@ -175,7 +175,7 @@ async def on_message(message):
                             client.configs[guild_id].in_voice = False
                             return
                     except Exception as e:
-                        message.channel.send(const.USER_NOT_IN_VOICE_ERROR)
+                        await message.channel.send(const.USER_NOT_IN_VOICE_ERROR)
                         return
             elif special_command == const.JOIN_NOTIFY:
                 client.configs[guild_id].voice_client = await message.author.voice.channel.connect()
@@ -206,6 +206,7 @@ async def on_message(message):
             return
         else:
             await message.channel.send(const.INVALID_COMMAND_ERROR)
+            return
         
 
 
@@ -229,6 +230,15 @@ async def on_message(message):
     #         print(response)
     #         await message.channel.send(response)
     #         return
+
+    # contains url
+    url = get_url(message.content)
+    if url != '':
+        print('url found: ' + url)
+        async with message.channel.typing():
+            site_contents = scrape_site(url)
+            client.configs[guild_id].message_history += site_contents
+            await message.channel.send(const.URL_CONSUMED_NOTIFY)
 
     # Using AI
     async with message.channel.typing():
@@ -297,6 +307,10 @@ def special_commands(message, guild_id) -> str:
         if len(parts) == 1:
             return const.INVALID_USE_ERROR
         return const.SUMMARIZE_NOTIFY + ' '.join(parts[1:])
+    elif parts[0] == '-clear':
+        #clear history
+        client.configs[guild_id].message_history = []
+        return const.CLEAR_HISTORY_NOTIFY
     elif parts[0] == '-start':
         if client.configs[guild_id].current_status == 'On':
             return const.ALREADY_STARTED_ERROR
@@ -426,6 +440,8 @@ async def disconnect_when_done(guild_id):
     await client.configs[guild_id].voice_client.disconnect()
 
 def clean_response(response) -> str:
+    if response[:2] == '\n\n':
+        response = response[2:]
     if response[:3] == 'AI:':
         response = response[3:]
     # if the first characters are "As an AI language model, ", remove them
@@ -471,5 +487,19 @@ def coded_instructions(message) -> str:
         return f'<t:{timestamp}:F>'
     elif 'weather' in message and 'what' in message:
         return find_weather(message)
+    
+async def send_pulse(x):
+    import asyncio
+    for i in range(0, x):
+        client.ws.ping()
+        await asyncio.sleep(10)
+
+def get_url(message) -> str:
+    import re
+    url = re.compile(r'https?://\S+|www\.\S+')
+    if url.search(message):
+        return url.search(message).group()
+    
+    return ''
     
 client.run(TOKEN)

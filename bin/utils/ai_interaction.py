@@ -25,21 +25,28 @@ def generate_response_old(prompt, engine="ada", temperature=0.5, max_tokens=256,
 
 # Define function to generate response
 def generate_response(model="gpt-3.5-turbo", history=[], personality=True):
+    is_truncated = False
     try:
-        while num_tokens_from_messages(history) > 3500:
+        while num_tokens_from_messages(history) > 4000:
             # get rid of oldest message
-            print("History Too Long, Removing: " + history.pop(0))
+            print("History Too Long, Removing Oldest Message")
+            history.pop()
+            is_truncated = True
         
         # add {} to the top of history
         if personality:
             history.insert(0, {"role": "system", "content": const.BOT_PERSONALITY})
+        
         response = openai.ChatCompletion.create(
             model=model,
             messages=history
         )
         response = response["choices"][0]["message"]["content"]
-        return response
+        if is_truncated:
+            response = "**History too long, some messages have been removed.\n**" + response
+        return response 
     except Exception as e:
+        print(e)
         return "Im having some issues:\n```" + str(e) + "```"
     
 def generate_image(prompt):

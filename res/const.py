@@ -11,6 +11,7 @@ Here are some commands you can use:
 `-search <query>` - Search wikipedia
 `-url <url>` - Consume a url
 `-summarize <url>` - Summarize a url
+`-clear` - Clear the conversation history (Useful if you post links)
 `-start` - Start a conversation
 `-stop` - Stop a conversation
 `-model <model>` - Set the model to use (Currently disabled)
@@ -36,6 +37,7 @@ VALID_COMMAND_HEADERS = [
     '-search',
     '-url',
     '-summarize',
+    '-clear',
     '-start',
     '-stop',
     '-model',
@@ -103,6 +105,8 @@ IMAGE_GENERATE_SUCCESS = 'Image generated!'
 
 JOIN_NOTIFY = 'Joining voice channel...'
 LEAVE_NOTIFY = 'Leaving voice channel...'
+
+CLEAR_HISTORY_NOTIFY = 'Clearing history...'
 
 PONG_NOTIFY = 'Pong!'
 

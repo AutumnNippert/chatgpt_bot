@@ -1,7 +1,7 @@
 __pycache__/
 tmp/
+res/
 logs/
-data/
 .venv/
 .env
 .ssh
