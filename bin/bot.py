@@ -8,6 +8,9 @@ from bin.utils.file_interaction import *
 from bin.utils.tts import tts_watson, tts_google, tts_dectalk
 from bin.utils.ai_interaction import query, query_old, query_image, needs_moderation
 from bin.classes.data_structures import BotConfig
+from bin.utils.wikipedia_interaction import search
+from bin.utils.weather_interaction import find_weather
+from bin.utils.url_interaction import scrape_site
 
 from dotenv import load_dotenv
 import discord
@@ -70,12 +73,12 @@ async def on_message(message):
         client.configs[guild_id].message_history = []
     # keep track of memory
     if message.author == client.user:
-        client.configs[guild_id].message_history.append('AI: ' + message.content)
+        client.configs[guild_id].message_history.append({"role":"assistant", "content":message.content})
         if len(client.configs[guild_id].message_history) > client.configs[guild_id].message_history_limit:
             client.configs[guild_id].message_history.pop(0)
         return
     
-    client.configs[guild_id].message_history.append(message.author.name + ': ' + message.content)
+    client.configs[guild_id].message_history.append({"role":"user", "content":'From ' + message.author.name + ': ' + message.content})
     if len(client.configs[guild_id].message_history) > client.configs[guild_id].message_history_limit:
         client.configs[guild_id].message_history.pop(0)
 
@@ -104,15 +107,37 @@ async def on_message(message):
     if message.content.split(' ')[0] in const.VALID_COMMAND_HEADERS:
         special_command = special_commands(message, guild_id)
         if special_command:
+            print('Special Command: ' + special_command)
             #if first words are const.ASK_NOTIFY
             if const.ASK_NOTIFY in special_command:
                 async with message.channel.typing():
                     question = special_command.replace(const.ASK_NOTIFY, '')
-                    response = query(question)
+                    response = query(question, personality=False)
                     response = clean_response(response)
                     await message.channel.send(response)
                     return
-            if const.SAY_NOTIFY in special_command:
+            if const.URL_NOTIFY in special_command:
+                async with message.channel.typing():
+                    url = special_command.replace(const.URL_NOTIFY, '')
+                    site_contents = scrape_site(url)
+                    client.configs[guild_id].message_history += site_contents
+                    await message.channel.send(const.URL_CONSUMED_NOTIFY)
+                    return
+            elif const.SEARCH_NOTIFY in special_command:
+                async with message.channel.typing():
+                    question = special_command.replace(const.SEARCH_NOTIFY, '')
+                    response = search(q=question)
+                    await message.channel.send(response)
+                    return
+            elif const.SUMMARIZE_NOTIFY in special_command:
+                async with message.channel.typing():
+                    url = special_command.replace(const.URL_NOTIFY, '')
+                    site_contents = scrape_site(url)
+                    response = query(history=site_contents + [{"role":"user", "content":"Summarize the information."}], personality=False)
+                    response = clean_response(response)
+                    await message.channel.send(response)
+                    return
+            elif const.SAY_NOTIFY in special_command:
                 if client.configs[guild_id].voice_client:
                     async with message.channel.typing():
                         text = special_command.replace(const.SAY_NOTIFY, '')
@@ -193,14 +218,25 @@ async def on_message(message):
     # Toggle
     if client.configs[guild_id].current_status == 'Off':
         return
+    
+    # if is_question(message.content):
+    #     response = coded_instructions(message.content)
+    #     if response:
+    #         await message.channel.send(response)
+    #         return
+    #     async with message.channel.typing():
+    #         response = search(q=message.content, history=client.configs[guild_id].message_history)
+    #         print(response)
+    #         await message.channel.send(response)
+    #         return
 
     # Using AI
     async with message.channel.typing():
         # Generate Response
         if client.configs[guild_id].model != 'gpt-3.5-turbo':
-            response = query_old(message.content, client.configs[guild_id].model)
+            response = query_old(str(client.configs[guild_id].message_history) + "\nPrompt: " + message.content, client.configs[guild_id].model)
         else:
-            response = query(str(client.configs[guild_id].message_history) + message.content)
+            response = query(history=client.configs[guild_id].message_history)
 
         response = clean_response(response)
         if response == '':
@@ -247,8 +283,20 @@ def special_commands(message, guild_id) -> str:
     parts = message.content.split(' ')
     if parts[0] == '-ask':
         if len(parts) == 1:
-            return const.INVALID_ASK_ERROR
+            return const.INVALID_USE_ERROR
         return const.ASK_NOTIFY + ' '.join(parts[1:])
+    elif parts[0] == '-search':
+        if len(parts) == 1:
+            return const.INVALID_USE_ERROR
+        return const.SEARCH_NOTIFY + ' '.join(parts[1:])
+    elif parts[0] == '-url':
+        if len(parts) == 1:
+            return const.INVALID_USE_ERROR
+        return const.URL_NOTIFY + ' '.join(parts[1:])
+    elif parts[0] == '-summarize':
+        if len(parts) == 1:
+            return const.INVALID_USE_ERROR
+        return const.SUMMARIZE_NOTIFY + ' '.join(parts[1:])
     elif parts[0] == '-start':
         if client.configs[guild_id].current_status == 'On':
             return const.ALREADY_STARTED_ERROR
@@ -271,13 +319,13 @@ def special_commands(message, guild_id) -> str:
             return const.INVALID_MODEL_ERROR
     elif parts[0] == '-get':
         if len(parts) == 1:
-            return const.INVALID_COMMAND_ERROR
+            return const.INVALID_USE_ERROR
         elif parts[1] == 'model':
             return const.MODEL_GET_NOTIFY + client.configs[guild_id].model
         elif parts[1] == 'status':
             return const.STATUS_GET_NOTIFY + client.configs[guild_id].current_status
         else:
-            return const.INVALID_COMMAND_ERROR
+            return const.INVALID_USE_ERROR
     elif parts[0] == '-help':
         return const.HELP_STRING
     elif parts[0] == '-image':
@@ -285,7 +333,7 @@ def special_commands(message, guild_id) -> str:
             return const.CLEARED_USER_ONLY_ERROR
         
         if len(parts) == 1:
-            return const.INVALID_COMMAND_ERROR
+            return const.INVALID_USE_ERROR
         
         return const.IMAGE_GENERATE_NOTIFY + ' '.join(parts[1:])
     elif parts[0] == '-ping':
@@ -333,7 +381,7 @@ def special_commands(message, guild_id) -> str:
         
     elif parts[0] == '-say':
         if len(parts) == 1:
-            return const.INVALID_COMMAND_ERROR
+            return const.INVALID_USE_ERROR
         return const.SAY_NOTIFY + ' '.join(parts[1:])
     elif parts[0] == '-o':
         return
@@ -398,4 +446,30 @@ def log_message(message, guild_id):
     text = str(timestamp) + ":: " + str(client.configs[guild_id].last_sender) + ' -> ' + str(client.configs[guild_id].conversee) + ' : ' + str(message.content)
     log(filename, text)
 
+def is_question(message) -> bool:
+    question_words = ["what", "why", "when", "where", "how", "which", "whom", "whose", "who"]
+
+    question = message
+    question = question.lower()
+
+    if any(word in question for word in question_words):
+        return True
+    else:
+        return False
+    
+def coded_instructions(message) -> str:
+    import datetime
+    import time
+    message = message.lower()
+    if 'time' in message and 'what' in message:
+        date_time = datetime.datetime.now()
+        timestamp = int(time.mktime(date_time.timetuple()))
+        return f'<t:{timestamp}:t>'
+    elif 'date' in message and 'what' in message:
+        date_time = datetime.datetime.now()
+        timestamp = int(time.mktime(date_time.timetuple()))
+        return f'<t:{timestamp}:F>'
+    elif 'weather' in message and 'what' in message:
+        return find_weather(message)
+    
 client.run(TOKEN)

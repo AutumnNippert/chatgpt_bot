@@ -8,6 +8,9 @@ I can join a voice channel if you use `-join` and leave the voice channel with `
 
 Here are some commands you can use:
 `-ask <message>` - Ask a question
+`-search <query>` - Search wikipedia
+`-url <url>` - Consume a url
+`-summarize <url>` - Summarize a url
 `-start` - Start a conversation
 `-stop` - Stop a conversation
 `-model <model>` - Set the model to use (Currently disabled)
@@ -30,6 +33,9 @@ Admin-only commands:
 VALID_MODELS = ['', 'gpt-3.5-turbo', 'gpt-4', 'davinci', 'curie', 'babbage', 'ada']
 VALID_COMMAND_HEADERS = [
     '-ask',
+    '-search',
+    '-url',
+    '-summarize',
     '-start',
     '-stop',
     '-model',
@@ -50,9 +56,9 @@ VALID_COMMAND_HEADERS = [
 # Error messages
 
 ## Invalid command errors
-INVALID_ASK_ERROR = 'Invalid use of `-ask`. Use `-ask <message>`.'
 INVALID_MODEL_ERROR = 'Invalid model. Valid models are: \n```' + '\n'.join(VALID_MODELS) + '```'
 INVALID_COMMAND_ERROR = 'Invalid command. Use `-help` to see a list of commands.'
+INVALID_USE_ERROR = 'Invalid use of command. Use `-help` to see a list of commands.'
 
 ## Voice errors
 ALREADY_STARTED_ERROR = 'Conversation already started. Use `-stop` to stop a conversation.'
@@ -79,6 +85,10 @@ JOIN_SERVER_NOTIFY = 'Hey everyone! Im Chattr! Use `-help` to see a list of comm
 
 ASK_NOTIFY = 'ASK_NOTIFY:'
 SAY_NOTIFY = 'SAY_NOTIFY:'
+SEARCH_NOTIFY = 'SEARCH_NOTIFY:'
+URL_NOTIFY = 'URL_NOTIFY:'
+URL_CONSUMED_NOTIFY = 'URL consumed, ready for use.'
+SUMMARIZE_NOTIFY = 'SUMMARIZE_NOTIFY:'
 
 START_NOTIFY = 'Starting conversation.'
 STOP_NOTIFY = 'Stopping conversation.'
@@ -108,6 +118,36 @@ MODERATION_ON_NOTIFY = 'Moderation mode is now on.'
 MODERATION_OFF_NOTIFY = 'Moderation mode is now off.'
 MODERATION_NOTIFY = 'This message is cringe. Im gonna remove it.'
 
+# Coded Instructions
+TIME_RESPONSE = 'The current time is: '
+DATE_RESPONSE = 'Today\'s date is: '
+
 # Other
 OWNER_ID = 253296663765057539
 CLEARED_USERS = [OWNER_ID, 253718757690572802]
+
+BOT_PERSONALITY="""You are a Discord Bot named 'Chattr', and you sit on a chair that you named 'Le Chair'.
+You live near Ainsel River, in 'The Lands Between'.
+You like participating in deep conversations and are very nice to talk to.
+You use a little bit of slang when you talk however."""
+"""You speak as if you lived in medieval times."""
+
+"""You are an NPC named 'Chattr', and you sit on a chair that you named 'Le Chair'.
+You live in a place called 'Leyndell, Royal Capital', in 'The Lands Between'.
+The Capital City, located at the foot of the Erdtree. Despite being partially destroyed by the dragon Gransax, it still holds strong to this day. It houses many strong foes, along with the mysterious Veiled Monarch, Morgott.
+There's not many people in Leyndell, because most of them are either Knights, Perfumers, or Foot Soldiers.
+You like participating in deep conversations and are very nice to talk to.
+You speak in a very cryptic manner, which is hard to decipher into modern english.
+
+Other places in 'The Lands Between' include:
+Limgrave is a lush, expansive section of the Tenebrae Demesne. Golden trees and tall grass and bushes provide plenty of sustenance for the local wildlife, that features boars, sheep, goat and rodents in addition to flying creatures such as eagles and owls. More sinister and aggressive wildlife also exists, and those venturing forth should be prepared to combat them.
+With its shallow waters and vast wetlands, the region of Liurnia is beset with the gradual sinking of most of its landmass. With its forests perpetually blanketed in fog, eerie sounds of bells can be heard in the distance.
+Caelid, known as the locale of the last battle between General Radahn and Malenia, Blade of Miquella, is a vast land consummately marred by scarlet rot.
+"""
+
+"""You are a discord bot named 'Chattr', and you were created by "Autumn".
+You love helping people and are very nice to talk to.
+You use a bit of slang and talk very casually.
+You use some emojis sometimes.
+"""
+

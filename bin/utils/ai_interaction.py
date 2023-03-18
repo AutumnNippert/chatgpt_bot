@@ -1,6 +1,8 @@
 import openai
 import os
 from dotenv import load_dotenv
+import res.const as const
+from bin.utils.misc import num_tokens_from_messages
 
 # Set your API key
 load_dotenv()
@@ -22,11 +24,18 @@ def generate_response_old(prompt, engine="ada", temperature=0.5, max_tokens=256,
     return response["choices"][0]["text"]
 
 # Define function to generate response
-def generate_response(prompt, model="gpt-3.5-turbo"):
+def generate_response(model="gpt-3.5-turbo", history=[], personality=True):
     try:
+        while num_tokens_from_messages(history) > 3500:
+            # get rid of oldest message
+            print("History Too Long, Removing: " + history.pop(0))
+        
+        # add {} to the top of history
+        if personality:
+            history.insert(0, {"role": "system", "content": const.BOT_PERSONALITY})
         response = openai.ChatCompletion.create(
             model=model,
-            messages=[{"role": "user", "content": prompt}]
+            messages=history
         )
         response = response["choices"][0]["message"]["content"]
         return response
@@ -54,30 +63,12 @@ def needs_moderation(message) -> bool:
     )
     return response['results'][0]['flagged']
 
-def requires_search(prompt) -> bool:
-    NEEDS_SEARCH_PROMPT = f"""Q: What is the capital of the United States?
-    A: True
-
-    Q: When does this new movie come out?
-    A: True
-
-    Q: How are you today?
-    A: False
-
-    Q: I think that James isn't alive
-    A: False
-
-    Q: You are wrong
-    A: False
-    
-    Q: {prompt}
-    A: """
-    print(openai.Completion.create(model='davinci', prompt=NEEDS_SEARCH_PROMPT, stop="\n", temperature=0))
-
 # Define function to run the chatbot
 
-def query(prompt):
-    return generate_response(prompt)
+def query(prompt='', history=[], personality=True):
+    if prompt != '':
+        history.append({"role":"user", "content":prompt})
+    return generate_response(history=history, personality=personality)
 
 def query_image(prompt):
     return generate_image(prompt)
@@ -92,4 +83,4 @@ def test_moderation():
     print(needs_moderation('kill yourself'))
 
 if __name__ == "__main__":
-    print(requires_search('When did george washington die?'))
+    pass
