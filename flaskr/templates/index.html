@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Chattr</title>
+</head>
+
+<body>
+    <h1>Chattr</h1>
+    <p>Chattr is a simple chat application built with Flask and GPT-3.5-turbo.</p>
+    <p>Enter a prompt to start chatting!</p>
+    <form action="/chat" method="post">
+        <input type="text" name="prompt" placeholder="Enter your prompt" />
+        <input type="submit" value="Enter" />
+    </form>
+    {% for response in responses %}
+        {{ response.role }}:
+        {{ response.content }}
+        <br>
+    {% endfor %}
+
+
+</body>
+
+</html>
