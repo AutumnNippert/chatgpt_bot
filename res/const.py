@@ -7,31 +7,34 @@ I will also start a conversation if you ping or reply to me.
 I can join a voice channel if you use `-join` and leave the voice channel with `-leave`.
 
 Here are some commands you can use:
+One off commands:
 `-ask <message>` - Ask a question
 `-search <query>` - Search wikipedia
 `-url <url>` - Consume a url
 `-summarize <url>` - Summarize a url
 `-clear` - Clear the conversation history (Useful if you post links)
+`-say <message>` - Make me say something
+
+Conversation commands:
 `-start` - Start a conversation
 `-stop` - Stop a conversation
-`-model <model>` - Set the model to use (Currently disabled)
-`-get model` - Get the model being used
 `-get status` - Get the status of the conversation
-`-help` - Show this message
 `-join <channel>` - Join a voice channel
 `-leave` - Leave the voice channel
 `-tts` - Toggle text-to-speech (must be in a voice channel)
 `-ttsset <service>` - Set the text-to-speech service to use
-`-say <message>` - Make me say something
 `-o <message>` - Omit a message while conversing
 
 Cleared-user commands:
 `-image <prompt>` - Generate an image
 
 Admin-only commands:
-`-mod - Toggle moderation mode`"""
+`-mod - Toggle moderation mode`
 
-VALID_MODELS = ['', 'gpt-3.5-turbo', 'gpt-4', 'davinci', 'curie', 'babbage', 'ada']
+Misc commands:
+`-help` - Show this message
+`-ping` - Ping the bot"""
+
 VALID_COMMAND_HEADERS = [
     '-ask',
     '-search',
@@ -40,7 +43,6 @@ VALID_COMMAND_HEADERS = [
     '-clear',
     '-start',
     '-stop',
-    '-model',
     '-get',
     '-help',
     '-image',
@@ -58,9 +60,10 @@ VALID_COMMAND_HEADERS = [
 # Error messages
 
 ## Invalid command errors
-INVALID_MODEL_ERROR = 'Invalid model. Valid models are: \n```' + '\n'.join(VALID_MODELS) + '```'
 INVALID_COMMAND_ERROR = 'Invalid command. Use `-help` to see a list of commands.'
 INVALID_USE_ERROR = 'Invalid use of command. Use `-help` to see a list of commands.'
+
+URL_ERROR='The url provided is invalid or is inaccessible.'
 
 ## Voice errors
 ALREADY_STARTED_ERROR = 'Conversation already started. Use `-stop` to stop a conversation.'
@@ -94,9 +97,6 @@ SUMMARIZE_NOTIFY = 'SUMMARIZE_NOTIFY:'
 
 START_NOTIFY = 'Starting conversation.'
 STOP_NOTIFY = 'Stopping conversation.'
-
-MODEL_SET_NOTIFY = 'Model set to '
-MODEL_GET_NOTIFY = 'Model: '
 
 STATUS_GET_NOTIFY = 'Status: '
 
@@ -155,3 +155,6 @@ You use a bit of slang and talk very casually.
 You use some emojis sometimes.
 """
 
+# MAINTENANCE
+MAINTENANCE = False
+MAINTENANCE_MESSAGE = 'Chattr is currently undergoing maintenance. Please try again later.'

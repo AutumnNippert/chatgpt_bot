@@ -1,4 +1,5 @@
 # bot.py
+import asyncio
 import os
 import sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -6,11 +7,12 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import res.const as const
 from bin.utils.file_interaction import *
 from bin.utils.tts import tts_watson, tts_google, tts_dectalk
-from bin.utils.ai_interaction import query, query_old, query_image, needs_moderation
+from bin.utils.ai_interaction import query, query_image, needs_moderation
 from bin.classes.data_structures import BotConfig
 from bin.utils.wikipedia_interaction import search
 from bin.utils.weather_interaction import find_weather
 from bin.utils.url_interaction import scrape_site
+from bin.utils.misc import num_tokens_from_messages
 
 from dotenv import load_dotenv
 import discord
@@ -20,6 +22,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 
 intents = discord.Intents.default()
 intents.message_content = True
+intents.members = True
 client = discord.Client(intents=intents)
 
 @client.event
@@ -55,6 +58,10 @@ async def on_guild_join(guild):
 
 @client.event
 async def on_message(message):
+    if const.MAINTENANCE:
+        if message.author != client.user:
+            await message.channel.send(const.MAINTENANCE_MESSAGE)
+        return
     # if DM
     if not message.guild:
         print('Attempted DM from ' + message.author.name + ': ' + message.content)
@@ -68,28 +75,46 @@ async def on_message(message):
     
     guild_id = message.guild.id
 
+    # Whiteboard worthy
+    # if sender is not set, set sender to author
+    # if sender is set, but author is sender, do nothing
+    # if sender is set, but author is not sender, set recipient to sender, and sender to author
+    if client.configs[guild_id].sender_id == None:
+        client.configs[guild_id].sender_id = message.author.id
+    elif client.configs[guild_id].sender_id == message.author.id:
+        pass
+    else:
+        client.configs[guild_id].recipient_id = client.configs[guild_id].sender_id
+        client.configs[guild_id].sender_id = message.author.id
+
+    log_message(message, guild_id)
+    
+
+    # if any user is mentioned
+    if message.mentions:
+        client.configs[guild_id].done = asyncio.Future()
+        client.configs[guild_id].recipient_id = message.mentions[0].id
+        #convert mentions to names
+        for mention in message.mentions:
+            message.content = message.content.replace('<@' + str(mention.id) + '>', mention.name)
+
     #create memory if not exists
     if not hasattr(client.configs[guild_id], 'message_history'):
         client.configs[guild_id].message_history = []
     # keep track of memory
     if message.author == client.user:
         client.configs[guild_id].message_history.append({"role":"assistant", "content":message.content})
-        if len(client.configs[guild_id].message_history) > client.configs[guild_id].message_history_limit:
+        if num_tokens_from_messages(client.configs[guild_id].message_history) > 4000:
             client.configs[guild_id].message_history.pop(0)
         return
     
-    client.configs[guild_id].message_history.append({"role":"user", "content":'From ' + message.author.name + ': ' + message.content})
-    if len(client.configs[guild_id].message_history) > client.configs[guild_id].message_history_limit:
+    client.configs[guild_id].message_history.append({"role":"user", "content":'From ' + message.author.display_name + ': ' + message.content})
+    if num_tokens_from_messages(client.configs[guild_id].message_history) > 4000:
         client.configs[guild_id].message_history.pop(0)
 
     # if not a message
     if message.type != discord.MessageType.default and message.type != discord.MessageType.reply:
         return
-    
-    log_message(message, guild_id)
-    
-    # Set last_sender to author
-    client.configs[guild_id].last_sender = message.author.id
 
     if client.configs[guild_id].moderation:
         if needs_moderation(message.content):
@@ -104,10 +129,13 @@ async def on_message(message):
 
     # Special Commands
     # check if starts with a command header
-    if message.content.split(' ')[0] in const.VALID_COMMAND_HEADERS:
+    possible_command = message.content.split(' ')[0]
+    if possible_command in const.VALID_COMMAND_HEADERS:
+        if possible_command == '-o':
+            return
         special_command = special_commands(message, guild_id)
         if special_command:
-            print('Special Command: ' + special_command)
+            print('Special Command: ' + message.content)
             #if first words are const.ASK_NOTIFY
             if const.ASK_NOTIFY in special_command:
                 async with message.channel.typing():
@@ -120,6 +148,9 @@ async def on_message(message):
                 async with message.channel.typing():
                     url = special_command.replace(const.URL_NOTIFY, '')
                     site_contents = scrape_site(url)
+                    if site_contents == None:
+                        await message.channel.send(const.URL_ERROR)
+                        return
                     client.configs[guild_id].message_history += site_contents
                     await message.channel.send(const.URL_CONSUMED_NOTIFY)
                     return
@@ -133,6 +164,9 @@ async def on_message(message):
                 async with message.channel.typing():
                     url = special_command.replace(const.SUMMARIZE_NOTIFY, '')
                     site_contents = scrape_site(url)
+                    if site_contents == None:
+                        await message.channel.send(const.URL_ERROR)
+                        return
                     response = query(history=(site_contents + [{"role":"user", "content":"Summarize the information."}]), personality=False)
                     response = clean_response(response)
                     await message.channel.send(response)
@@ -211,10 +245,18 @@ async def on_message(message):
 
 
     # Check if should respond
-    if not should_respond(message):
-        client.configs[guild_id].conversee = message.author.id
-        client.configs[guild_id].last_sender = client.user.id
-        return
+    # if bot is mentioned, respond
+    if message.mentions != None:
+        if client.user in message.mentions:
+            client.configs[guild_id].current_status = 'On'
+    
+    if message.reference:
+        if message.reference.resolved.author == client.user:
+            client.configs[guild_id].current_status = 'On'
+            #get reference message
+            reference_message = message.reference.resolved
+            #add to history
+            client.configs[guild_id].message_history.append({"role":"system", "content":"Refering to: " + reference_message.content})
     
     # Toggle
     if client.configs[guild_id].current_status == 'Off':
@@ -237,23 +279,27 @@ async def on_message(message):
         print('url found: ' + url)
         async with message.channel.typing():
             site_contents = scrape_site(url)
-            client.configs[guild_id].message_history += site_contents
-            await message.channel.send(const.URL_CONSUMED_NOTIFY)
+            if site_contents != None:
+                client.configs[guild_id].message_history += site_contents
+                client.configs[guild_id].message_history.append({"role":"user", "content":message.content})
+                while num_tokens_from_messages(client.configs[guild_id].message_history) > 4000:
+                    client.configs[guild_id].message_history.pop(0)
+                # await message.channel.send(const.URL_CONSUMED_NOTIFY)
+            else:
+                await message.channel.send(const.URL_ERROR)
+                return
 
     # Using AI
     async with message.channel.typing():
         # Generate Response
-        if client.configs[guild_id].model != 'gpt-3.5-turbo':
-            response = query_old(str(client.configs[guild_id].message_history) + "\nPrompt: " + message.content, client.configs[guild_id].model)
-        else:
-            response = query(history=client.configs[guild_id].message_history)
+        print('generating response...')
+        response = query(history=client.configs[guild_id].message_history)
+        print('response generated')
 
         response = clean_response(response)
         if response == '':
             response = const.NO_RESPONSE_ERROR
 
-        client.configs[guild_id].last_sender = client.configs[guild_id].conversee
-        client.configs[guild_id].conversee = message.author.id
         if client.configs[guild_id].tts:
             filename = str(guild_id) + '_tts_response.mp3'
             if client.configs[guild_id].tts_service == 'watson':
@@ -267,27 +313,6 @@ async def on_message(message):
             await remove_audio_file_when_done(filename, guild_id)
         else:
             await message.channel.send(response)
-
-def should_respond(message) -> bool:
-    guild_id = message.guild.id
-    # if talking to self, stop
-    if client.configs[guild_id].last_sender == client.user.id and client.configs[guild_id].conversee == client.user.id:
-        return False
-    
-    # if bot is mentioned, respond
-    if '@' in message.content:
-        if client.user in message.mentions:
-            client.configs[guild_id].current_status = 'On'
-            return True
-        else:
-            return False
-    if message.reference:
-        if message.reference.resolved.author == client.user:
-            return True
-        else:
-            return False
-    
-    return True
 
 def special_commands(message, guild_id) -> str:
     parts = message.content.split(' ')
@@ -323,19 +348,9 @@ def special_commands(message, guild_id) -> str:
         else:
             client.configs[guild_id].current_status = 'Off'
             return const.STOP_NOTIFY
-    elif parts[0] == '-model':
-        if len(parts) == 1:
-            return const.INVALID_MODEL_ERROR
-        elif parts[1] in const.VALID_MODELS:
-            client.configs[guild_id].model = parts[1]
-            return const.MODEL_SET_NOTIFY + parts[1]
-        else:
-            return const.INVALID_MODEL_ERROR
     elif parts[0] == '-get':
         if len(parts) == 1:
             return const.INVALID_USE_ERROR
-        elif parts[1] == 'model':
-            return const.MODEL_GET_NOTIFY + client.configs[guild_id].model
         elif parts[1] == 'status':
             return const.STATUS_GET_NOTIFY + client.configs[guild_id].current_status
         else:
@@ -454,12 +469,22 @@ def clean_response(response) -> str:
     return response
 
 def log_message(message, guild_id):
-    if client.configs[guild_id].current_status == 'Off':
-        return
+    # if client.configs[guild_id].current_status == 'Off':
+    #     return
     
     timestamp = message.created_at.strftime("%m/%d/%Y, %H:%M:%S")
     filename = str(guild_id) + '-messages.log'
-    text = str(timestamp) + ":: " + str(client.configs[guild_id].last_sender) + ' -> ' + str(client.configs[guild_id].conversee) + ' : ' + str(message.content)
+    sender = message.guild.get_member(client.configs[guild_id].sender_id)
+    recipient = message.guild.get_member(client.configs[guild_id].recipient_id)
+    if sender is None:
+        sender = 'Unknown'
+    else:
+        sender = sender.name
+    if recipient is None:
+        recipient = 'Unknown'
+    else:
+        recipient = recipient.name
+    text = str(timestamp) + ":: " + sender + ' -> ' + recipient + ' : ' + str(message.content)
     log(filename, text)
 
 def is_question(message) -> bool:

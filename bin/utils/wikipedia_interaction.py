@@ -1,9 +1,7 @@
 import wikipedia
 from bin.utils.ai_interaction import generate_response
-#from bin.utils.spacy_interaction import get_wiki_query
 
 def search(q, history=[]):
-    #wiki_query = get_wiki_query(q)
     wiki_query = q
     print(f"Wikipedia search: {wiki_query}")
     useable_history = history.copy()

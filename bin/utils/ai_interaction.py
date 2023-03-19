@@ -13,16 +13,6 @@ def convert_audio_to_text(audio_file_path) -> str:
     transcript = openai.Audio.transcribe("whisper-1", audio_file)
     return transcript['text']
 
-def generate_response_old(prompt, engine="ada", temperature=0.5, max_tokens=256, n=1, stop='Q:'):
-    response = openai.Completion.create(
-        engine=engine,
-        prompt=prompt,
-        max_tokens=max_tokens, # limit because cringe
-        n=n,
-        temperature=temperature,
-    )
-    return response["choices"][0]["text"]
-
 # Define function to generate response
 def generate_response(model="gpt-3.5-turbo", history=[], personality=True):
     is_truncated = False
@@ -79,9 +69,6 @@ def query(prompt='', history=[], personality=True):
 
 def query_image(prompt):
     return generate_image(prompt)
-
-def query_old(prompt, engine="ada"):
-    return generate_response_old(prompt, engine)
 
 def test_audio():
     print(convert_audio_to_text("test_files/hungry.wav"))
