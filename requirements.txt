@@ -5,3 +5,5 @@ tiktoken
 python-dotenv
 ibm_watson
 gtts
+requests
+pyTesseract

@@ -14,6 +14,7 @@ One off commands:
 `-summarize <url>` - Summarize a url
 `-clear` - Clear the conversation history (Useful if you post links)
 `-say <message>` - Make me say something
+`-news` - Get the latest news
 
 Conversation commands:
 `-start` - Start a conversation
@@ -52,6 +53,7 @@ VALID_COMMAND_HEADERS = [
     '-tts',
     '-ttsset',
     '-say',
+    '-news',
     '-shutdown',
     '-mod',
     '-o'
@@ -94,6 +96,7 @@ SEARCH_NOTIFY = 'SEARCH_NOTIFY:'
 URL_NOTIFY = 'URL_NOTIFY:'
 URL_CONSUMED_NOTIFY = 'URL consumed, ready for use.'
 SUMMARIZE_NOTIFY = 'SUMMARIZE_NOTIFY:'
+NEWS_NOTIFY = 'NEWS_NOTIFY:'
 
 START_NOTIFY = 'Starting conversation.'
 STOP_NOTIFY = 'Stopping conversation.'

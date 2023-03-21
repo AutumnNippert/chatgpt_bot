@@ -1,4 +1,5 @@
 # bot.py
+import urllib
 import asyncio
 import os
 import sys
@@ -13,6 +14,7 @@ from bin.utils.wikipedia_interaction import search
 from bin.utils.weather_interaction import find_weather
 from bin.utils.url_interaction import scrape_site
 from bin.utils.misc import num_tokens_from_messages
+from bin.utils.ocr_interaction import get_text_from_image
 
 from dotenv import load_dotenv
 import discord
@@ -262,33 +264,46 @@ async def on_message(message):
     if client.configs[guild_id].current_status == 'Off':
         return
     
-    # if is_question(message.content):
-    #     response = coded_instructions(message.content)
-    #     if response:
-    #         await message.channel.send(response)
-    #         return
-    #     async with message.channel.typing():
-    #         response = search(q=message.content, history=client.configs[guild_id].message_history)
-    #         print(response)
-    #         await message.channel.send(response)
-    #         return
+    if is_question(message.content):
+        response = coded_instructions(message.content)
+        if response:
+            await message.channel.send(response)
+            return
+        # async with message.channel.typing():
+        #     response = search(q=message.content, history=client.configs[guild_id].message_history)
+        #     print(response)
+        #     await message.channel.send(response)
+        #     return
 
-    # contains url
-    url = get_url(message.content)
-    if url != '':
-        print('url found: ' + url)
-        async with message.channel.typing():
-            site_contents = scrape_site(url)
-            if site_contents != None:
-                client.configs[guild_id].message_history += site_contents
-                client.configs[guild_id].message_history.append({"role":"user", "content":message.content})
-                while num_tokens_from_messages(client.configs[guild_id].message_history) > 4000:
-                    client.configs[guild_id].message_history.pop(0)
-                # await message.channel.send(const.URL_CONSUMED_NOTIFY)
-            else:
-                await message.channel.send(const.URL_ERROR)
-                return
 
+
+    # contains image
+    image_filename = await get_image(message)
+    # wait for image to download.
+    import time
+    time.sleep(1)
+    if image_filename != None:
+        image_content = get_text_from_image(image_filename)
+        print ('image content: ' + image_content)
+        client.configs[guild_id].message_history.append({"role":"system", "content":"Image Content: " + image_content })
+    
+    # contains url and not image
+    if image_filename == None:
+        url = get_url(message.content)
+        if url != None:
+            print('url found: ' + url)
+            async with message.channel.typing():
+                site_contents = scrape_site(url)
+                if site_contents != None:
+                    client.configs[guild_id].message_history += site_contents
+                    client.configs[guild_id].message_history.append({"role":"user", "content":message.content})
+                    while num_tokens_from_messages(client.configs[guild_id].message_history) > 4000:
+                        client.configs[guild_id].message_history.pop(0)
+                    # await message.channel.send(const.URL_CONSUMED_NOTIFY)
+                else:
+                    await message.channel.send(const.URL_ERROR)
+                    return
+            
     # Using AI
     async with message.channel.typing():
         # Generate Response
@@ -332,6 +347,8 @@ def special_commands(message, guild_id) -> str:
         if len(parts) == 1:
             return const.INVALID_USE_ERROR
         return const.SUMMARIZE_NOTIFY + ' '.join(parts[1:])
+    elif parts[0] == '-news':
+        return get_news()
     elif parts[0] == '-clear':
         #clear history
         client.configs[guild_id].message_history = []
@@ -487,6 +504,22 @@ def log_message(message, guild_id):
     text = str(timestamp) + ":: " + sender + ' -> ' + recipient + ' : ' + str(message.content)
     log(filename, text)
 
+async def get_image(message):
+    if len(message.attachments) > 0:
+        attachment = message.attachments[0]
+        filename = 'res/' + str(message.guild.id) + '-image.png'
+        await attachment.save(filename)
+        return filename
+    elif len(message.embeds) > 0:
+        embed = message.embeds[0]
+        if embed.type == 'image':
+            # download the image
+            filename = 'res/' + str(message.guild.id) + '-image.png'
+            urllib.request.urlretrieve(embed.url, filename)
+            print ('downloaded image: ' + embed.url)
+            return filename
+    return None
+
 def is_question(message) -> bool:
     question_words = ["what", "why", "when", "where", "how", "which", "whom", "whose", "who"]
 
@@ -525,6 +558,18 @@ def get_url(message) -> str:
     if url.search(message):
         return url.search(message).group()
     
-    return ''
+    return None
+
+def get_news() -> str:
+    from newspaper import Article
+
+    url = 'https://apnews.com/'
+    article = Article(url)
+    article.download()
+    article.parse()
+    article.nlp()
+
+    return article.summary
+
     
 client.run(TOKEN)
