@@ -1,0 +1,68 @@
+{
+    "474096541142089728": {
+        "recipient_id": null,
+        "sender_id": null,
+        "current_status": "Off",
+        "model": "gpt-3.5-turbo",
+        "in_voice": false,
+        "voice_client": null,
+        "tts": false,
+        "tts_service": "google",
+        "moderation": false
+    },
+    "882833062638014484": {
+        "recipient_id": null,
+        "sender_id": null,
+        "current_status": "Off",
+        "model": "gpt-3.5-turbo",
+        "in_voice": false,
+        "voice_client": null,
+        "tts": false,
+        "tts_service": "google",
+        "moderation": false
+    },
+    "883071999138725949": {
+        "recipient_id": null,
+        "sender_id": null,
+        "current_status": "Off",
+        "model": "gpt-3.5-turbo",
+        "in_voice": false,
+        "voice_client": null,
+        "tts": false,
+        "tts_service": "google",
+        "moderation": false
+    },
+    "1065302721479049368": {
+        "recipient_id": null,
+        "sender_id": null,
+        "current_status": "Off",
+        "model": "gpt-3.5-turbo",
+        "in_voice": false,
+        "voice_client": null,
+        "tts": false,
+        "tts_service": "google",
+        "moderation": false
+    },
+    "1083899422770995321": {
+        "recipient_id": null,
+        "sender_id": null,
+        "current_status": "Off",
+        "model": "gpt-3.5-turbo",
+        "in_voice": false,
+        "voice_client": null,
+        "tts": false,
+        "tts_service": "google",
+        "moderation": false
+    },
+    "1085772115736797205": {
+        "recipient_id": null,
+        "sender_id": null,
+        "current_status": "Off",
+        "model": "gpt-3.5-turbo",
+        "in_voice": false,
+        "voice_client": null,
+        "tts": false,
+        "tts_service": "google",
+        "moderation": false
+    }
+}
