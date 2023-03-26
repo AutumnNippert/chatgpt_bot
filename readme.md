@@ -41,7 +41,7 @@ Optionally, you can add the following to enable the Watson TTS service:
 WATSON_API_KEY=<Your Watson API Key>
 ```
 
-Run setup.sh and this should install everything you need to run the bot (Ubuntu only)
+Run setup.sh and this should install everything you need to run the bot (Assuming apt, python3, and pip are installed)
 
 Run start_bot.sh to start the bot
 
@@ -72,9 +72,12 @@ sudo apt-get install ffmpeg
 sudo apt-get install tesseract-ocr
 ```
 
-## for newspaper3k
+## run setup_nltk.py for nltk punkt
+or run the following in a python shell
+```
 import nltk
 nltk.download('punkt')
+```
 
 # Licence
 This project is licensed under the MIT License - see the LICENSE file for details
