@@ -1,10 +1,6 @@
-sudo apt-get update
-sudo apt-get upgrade -y
-sudo apt-get install python3 -y
-sudo apt-get install python3-pip -y
-sudo apt-get install virtualenv -y
-sudo apt-get install ffmpeg -y
-sudo apt-get install tesseract-ocr -y
+sudo apt-get install virtualenv
+sudo apt-get install ffmpeg
+sudo apt-get install tesseract-ocr
 
 virtualenv .venv
 
