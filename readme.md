@@ -40,10 +40,11 @@ Optionally, you can add the following to enable the Watson TTS service:
 ```
 WATSON_API_KEY=<Your Watson API Key>
 ```
+Otherwise, just enter dummy values for the key.
 
-Run setup.sh and this should install everything you need to run the bot (Assuming apt, python3, and pip are installed)
+Run `sudo sh setup.sh` and this should install everything you need to run the bot (Assuming apt, python3, and pip are installed)
 
-Run start_bot.sh to start the bot
+Run `sh start_bot.sh` to start the bot
 
 # Requirements
 ## Python
