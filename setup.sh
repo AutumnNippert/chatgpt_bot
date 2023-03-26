@@ -1,3 +1,4 @@
+sudo apt-get update
 sudo apt-get install virtualenv
 sudo apt-get install ffmpeg
 sudo apt-get install tesseract-ocr
