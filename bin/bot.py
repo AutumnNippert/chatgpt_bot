@@ -8,12 +8,12 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import res.const as const
 from bin.utils.file_interaction import *
 from bin.utils.tts import tts_watson, tts_google, tts_dectalk
-from bin.utils.ai_interaction import query, query_image, needs_moderation
+from bin.utils.ai_interaction import query, query_image
 from bin.classes.data_structures import BotConfig
-from bin.utils.wikipedia_interaction import search
+#from bin.utils.wikipedia_interaction import search
 from bin.utils.weather_interaction import find_weather
 from bin.utils.url_interaction import scrape_site
-from bin.utils.misc import num_tokens_from_messages
+from bin.utils.misc import num_tokens_from_messages, google_search
 from bin.utils.ocr_interaction import get_text_from_image
 
 from dotenv import load_dotenv
@@ -118,17 +118,6 @@ async def on_message(message):
     if message.type != discord.MessageType.default and message.type != discord.MessageType.reply:
         return
 
-    if client.configs[guild_id].moderation:
-        if needs_moderation(message.content):
-            await message.delete() # requires manage messages permission
-            try:
-                await message.author.send(const.MODERATION_NOTIFY)
-            except Exception as e:
-                print('Could not send moderation message to user')
-                print(e)
-            finally:
-                return
-
     # Special Commands
     # check if starts with a command header
     possible_command = message.content.split(' ')[0]
@@ -159,8 +148,15 @@ async def on_message(message):
             elif const.SEARCH_NOTIFY in special_command:
                 async with message.channel.typing():
                     question = special_command.replace(const.SEARCH_NOTIFY, '')
-                    response = search(q=question)
-                    await message.channel.send(response)
+                    url = google_search(question, 1)
+                    print(url)
+                    site_contents = scrape_site(url)
+                    if site_contents == None:
+                        await message.channel.send(const.URL_ERROR)
+                        return
+                    response = query(history=(site_contents + [{"role":"user", "content":"Summarize the information."}]), personality=False)
+                    response = clean_response(response)
+                    await message.channel.send(url + "\n" + response)
                     return
             elif const.SUMMARIZE_NOTIFY in special_command:
                 async with message.channel.typing():

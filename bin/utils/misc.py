@@ -82,7 +82,7 @@ def google_search(term, num_results=10, lang="en", proxy=None, advanced=False, s
                 if link and title and description:
                     start += 1
                     if advanced:
-                        yield SearchResult(link["href"], title.text, description.text)
+                        return SearchResult(link["href"], title.text, description.text)
                     else:
-                        yield link["href"]
+                        return link["href"]
         sleep(sleep_interval)

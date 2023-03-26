@@ -51,17 +51,8 @@ def generate_image(prompt):
     except Exception as e:
         print(e)
 
-def needs_moderation(message) -> bool:
-    if 'dumbass' in message: # fun little ee
-        return True
-    response = openai.Moderation.create(
-        model="text-moderation-stable",
-        input=message
-    )
-    return response['results'][0]['flagged']
 
 # Define function to run the chatbot
-
 def query(prompt='', history=[], personality=True):
     if prompt != '':
         history.append({"role":"user", "content":prompt})
@@ -72,9 +63,6 @@ def query_image(prompt):
 
 def test_audio():
     print(convert_audio_to_text("test_files/hungry.wav"))
-
-def test_moderation():
-    print(needs_moderation('kill yourself'))
 
 if __name__ == "__main__":
     pass

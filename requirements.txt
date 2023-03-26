@@ -7,3 +7,5 @@ ibm_watson
 gtts
 requests
 pyTesseract
+nltk
+numpy
