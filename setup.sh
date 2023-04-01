@@ -1,6 +1,7 @@
-sudo apt-get install virtualenv
-sudo apt-get install ffmpeg
-sudo apt-get install tesseract-ocr
+sudo apt-get update
+sudo apt-get install python3-virtualenv -y
+sudo apt-get install ffmpeg -y
+sudo apt-get install tesseract-ocr -y
 
 virtualenv .venv
 
