@@ -46,6 +46,9 @@ Run `sudo sh setup.sh` and this should install everything you need to run the bo
 
 Run `sh start_bot.sh` to start the bot
 
+## Powershell
+Run `pwsh start_bot.ps1` to start the bot
+
 # Requirements
 ## Python
 ```
