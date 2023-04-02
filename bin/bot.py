@@ -246,11 +246,12 @@ async def on_message(message):
 
     # Check if should respond
     # if bot is mentioned, respond
-    if message.mentions != None:
+    if len(message.mentions) > 0:
         if client.user in message.mentions:
             client.configs[guild_id].current_status = 'On'
         else:
             return # someone else is mentioned, don't respond
+    
     
     if message.reference:
         if message.reference.resolved.author == client.user:
@@ -259,8 +260,7 @@ async def on_message(message):
             reference_message = message.reference.resolved
             #add to history
             client.configs[guild_id].message_history.append({"role":"system", "content":"Refering to: " + reference_message.content})
-        
-    
+
     # Toggle
     if client.configs[guild_id].current_status == 'Off':
         return
