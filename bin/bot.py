@@ -64,6 +64,7 @@ async def on_message(message):
         if message.author != client.user:
             await message.channel.send(const.MAINTENANCE_MESSAGE)
         return
+    
     # if DM
     if not message.guild:
         print('Attempted DM from ' + message.author.name + ': ' + message.content)
@@ -103,6 +104,7 @@ async def on_message(message):
     #create memory if not exists
     if not hasattr(client.configs[guild_id], 'message_history'):
         client.configs[guild_id].message_history = []
+        
     # keep track of memory
     if message.author == client.user:
         client.configs[guild_id].message_history.append({"role":"assistant", "content":message.content})
@@ -247,6 +249,8 @@ async def on_message(message):
     if message.mentions != None:
         if client.user in message.mentions:
             client.configs[guild_id].current_status = 'On'
+        else:
+            return # someone else is mentioned, don't respond
     
     if message.reference:
         if message.reference.resolved.author == client.user:
@@ -255,6 +259,7 @@ async def on_message(message):
             reference_message = message.reference.resolved
             #add to history
             client.configs[guild_id].message_history.append({"role":"system", "content":"Refering to: " + reference_message.content})
+        
     
     # Toggle
     if client.configs[guild_id].current_status == 'Off':
