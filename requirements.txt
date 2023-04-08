@@ -9,3 +9,4 @@ requests
 pyTesseract
 nltk
 numpy
+timeout-decorator

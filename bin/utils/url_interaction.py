@@ -1,11 +1,13 @@
 from bs4 import BeautifulSoup
 import requests
 from bin.utils.misc import num_tokens_from_messages
+from bin.utils.ai_interaction import compress_history
 import re
+from timeout_decorator import timeout
 
 CLEANR = re.compile('<[^>]*>')
 
-
+@timeout(30, timeout_exception=TimeoutError)
 def scrape_site(url) -> list:
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
@@ -75,12 +77,9 @@ def scrape_site(url) -> list:
             for item in list_content:
                 if item != '':
                     response.append({"role": "system", "content": item})
-                    if num_tokens_from_messages(response) > 3800:
-                        print ("Content is too long to digest. Consuming only the first 3800 tokens.")
-                        #remove last item
-                        print('only got as far as ' + str(response.pop()))
-                        response.append({"role": "system", "content": "Notify user: The Content is too long to digest. Consuming only the first 3800 tokens."})
-                        break
+                    if num_tokens_from_messages(response) > 3000:
+                        print('compressing page content')
+                        compress_history(response)
 
         # if content == None: # Old way of doing it
         #     print ("Old way")

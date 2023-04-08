@@ -133,6 +133,9 @@ DATE_RESPONSE = 'Today\'s date is: '
 OWNER_ID = 253296663765057539
 CLEARED_USERS = [OWNER_ID, 253718757690572802]
 
+# Threshold for how many tokens the history can be before it is compressed into a single message
+COMPRESSION_THRESHOLD = 3500 # max is ~4096
+
 BOT_PERSONALITY="""You are a Discord Bot named 'Chattr', and you sit on a chair that you named 'Le Chair'.
 You live near Ainsel River, in 'The Lands Between'.
 You like participating in deep conversations and are very nice to talk to.
@@ -157,6 +160,16 @@ You love helping people and are very nice to talk to.
 You use a bit of slang and talk very casually.
 You use some emojis sometimes.
 """
+
+# LOOKUP MESSAGES
+LOOKUP_MESSAGES = [
+    'Let me look it up...',
+    'I don\'t know, let me google it...',
+    'I\'m not sure, let me check...',
+    'I\'m not sure, let me look it up...',
+    'I\'ll go check...',
+    'I\'ll go look it up...'
+]
 
 # MAINTENANCE
 MAINTENANCE = False

@@ -8,13 +8,15 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import res.const as const
 from bin.utils.file_interaction import *
 from bin.utils.tts import tts_watson, tts_google, tts_dectalk
-from bin.utils.ai_interaction import query, query_image
+from bin.utils.ai_interaction import query, query_image, is_known
 from bin.classes.data_structures import BotConfig
 #from bin.utils.wikipedia_interaction import search
 from bin.utils.weather_interaction import find_weather
 from bin.utils.url_interaction import scrape_site
 from bin.utils.misc import num_tokens_from_messages, google_search
 from bin.utils.ocr_interaction import get_text_from_image
+
+from random import choice
 
 from dotenv import load_dotenv
 import discord
@@ -264,12 +266,13 @@ async def on_message(message):
     # Toggle
     if client.configs[guild_id].current_status == 'Off':
         return
-    
-    if is_question(message.content):
-        response = coded_instructions(message.content)
-        if response:
-            await message.channel.send(response)
-            return
+
+    # This shit gets annoying    
+    # if is_question(message.content):
+    #     response = coded_instructions(message.content)
+    #     if response:
+    #         await message.channel.send(response)
+    #         return
         # async with message.channel.typing():
         #     response = search(q=message.content, history=client.configs[guild_id].message_history)
         #     print(response)
@@ -304,12 +307,45 @@ async def on_message(message):
                 else:
                     await message.channel.send(const.URL_ERROR)
                     return
-            
+
     # Using AI
+    async with message.channel.typing():
+        # Checking if needs google search
+        if not is_known(history=client.configs[guild_id].message_history):
+            url = None
+            recent = client.configs[guild_id].message_history.pop()
+            print('unknown, searching web...')
+            await message.channel.send(choice(const.LOOKUP_MESSAGES))
+            try:
+                # client.configs[guild_id].message_history.append({"role":"user", "content":"Create a google search query based on the recent conversation, mainly regarding the most recent message. Respond with only the query."})
+                # q = query(history=client.configs[guild_id].message_history, personality=False)
+                # client.configs[guild_id].message_history.pop()
+                print ('query: ' + message.content)
+                url = google_search(message.content, 1)
+
+            except:
+                await message.channel.send('Google thinks I\'m a bot for some reason, and the capcha\'s are too hard; You know, the ones with the letters and stuff.')
+                return
+            await message.channel.send('<' + str(url) + '>')
+            site_contents = scrape_site(url)
+            client.configs[guild_id].message_history.append({"role":"system", "content":"site contents: " + str(site_contents)})
+            client.configs[guild_id].message_history.append(recent)
+
     async with message.channel.typing():
         # Generate Response
         print('generating response...')
+
+
+
+        # print('pre query history: ')
+        # for m in client.configs[guild_id].message_history:
+        #     print(m)
         response = query(history=client.configs[guild_id].message_history)
+        # print('post query history: ')
+        # for m in client.configs[guild_id].message_history:
+        #     print(m)
+        
+        #print('\n')
         print('response generated')
 
         response = clean_response(response)
